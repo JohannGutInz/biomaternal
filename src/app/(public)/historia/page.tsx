@@ -105,9 +105,9 @@ const LINEA_TIEMPO = [
 
 export default function HistoriaPage() {
   return (
-    <div className="relative -mt-16 min-h-screen bg-black pt-16">
+    <div className="relative -mt-16 min-h-full bg-black pt-16">
       <BrandBackground />
-      <div className="relative z-10 mx-auto max-w-2xl px-6 py-16 sm:py-20">
+      <div className="relative z-10 mx-auto max-w-4xl px-6 py-16 sm:py-24">
         <BrandPageHero
           eyebrow="Est. 2005 — De InvestiMerc a Glamour Models"
           title={
@@ -136,12 +136,12 @@ export default function HistoriaPage() {
         </div>
 
         <div className="mt-14 flex flex-col items-center gap-4 text-center">
-          <p className="text-2xl leading-tight font-light tracking-[0.1em] text-white uppercase sm:text-3xl">
+          <p className="text-3xl leading-tight font-light tracking-[0.1em] text-white uppercase sm:text-4xl">
             De encuestadores
             <br />a internacional
           </p>
-          <div className="h-px w-12 bg-gold-500 shadow-[0_0_18px_rgba(186,27,93,0.5)]" />
-          <p className="max-w-md text-[11px] leading-relaxed tracking-[0.12em] text-white/60 uppercase">
+          <div className="h-px w-16 bg-gold-500 shadow-[0_0_18px_rgba(186,27,93,0.5)]" />
+          <p className="max-w-lg text-sm leading-relaxed tracking-[0.1em] text-white/60 uppercase sm:text-base">
             De una agencia de encuestadores en CDMX a una operación de modelos y edecanes con alcance nacional e
             internacional (México y Colombia).
             <br />

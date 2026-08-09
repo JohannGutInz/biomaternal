@@ -25,6 +25,7 @@ const nextConfig: NextConfig = {
     serverActions: {
       allowedOrigins: ["localhost:3000", "*.app.github.dev"],
     },
+    authInterrupts: true,
   },
   images: {
     remotePatterns: remotePattern ? [remotePattern] : [],

@@ -39,7 +39,7 @@ export function AccordionCard({
       >
         <span
           className={cn(
-            "text-[12.5px] font-bold tracking-[0.14em] uppercase",
+            "text-sm font-bold tracking-[0.1em] uppercase sm:text-base",
             isLight ? "text-black" : "text-white",
           )}
         >
@@ -64,7 +64,7 @@ export function AccordionCard({
           {tag && (
             <span
               className={cn(
-                "mb-3 inline-block rounded-full border px-2.5 py-1 text-[9.5px] font-semibold tracking-[0.14em] uppercase",
+                "mb-3 inline-block rounded-full border px-2.5 py-1 text-xs font-semibold tracking-[0.12em] uppercase",
                 highlightTag
                   ? "border-gold-500 bg-gold-500/15 text-gold-400"
                   : isLight
@@ -77,7 +77,7 @@ export function AccordionCard({
           )}
           <div
             className={cn(
-              "text-[13px] leading-relaxed",
+              "text-sm leading-relaxed sm:text-base",
               isLight ? "text-black/75" : "text-white/78",
             )}
           >

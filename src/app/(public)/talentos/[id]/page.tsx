@@ -28,9 +28,9 @@ export default async function TalentDetailPage({
   const name = formatFullName(model);
 
   return (
-    <div className="relative -mt-16 min-h-screen bg-black pt-16">
+    <div className="relative -mt-16 min-h-full bg-black pt-16">
       <BrandBackground />
-      <div className="relative z-10 mx-auto max-w-5xl px-6 py-12">
+      <div className="relative z-10 mx-auto max-w-6xl px-6 py-14">
         <Link
           href="/talentos"
           className="mb-8 inline-flex items-center gap-1.5 text-sm font-medium text-white/60 transition-colors hover:text-white"

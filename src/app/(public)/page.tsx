@@ -62,7 +62,7 @@ export default async function HomePage() {
           />
 
           <p className="mb-5 text-xs font-semibold tracking-[0.34em] text-white/65 uppercase">
-           EST. 2016
+            EST. 2016
           </p>
 
           <h1 className="text-5xl leading-none font-light tracking-[0.14em] text-white uppercase sm:text-7xl">
@@ -130,7 +130,7 @@ export default async function HomePage() {
       {eventos.length > 0 && <EventosCarrusel eventos={eventos} agencyName={config.agencyName} />}
 
       {/* ── Talento destacado ── */}
-      {featuredModels.length > 0 && (
+      {/* {featuredModels.length > 0 && (
         <section className="relative z-10 border-t border-white/5 px-6 py-20">
           <div className="mx-auto max-w-6xl">
             <div className="mb-10 flex flex-wrap items-end justify-between gap-4">
@@ -155,10 +155,10 @@ export default async function HomePage() {
             </div>
           </div>
         </section>
-      )}
+      )} */}
 
       {/* ── CTA de cierre ── */}
-      <section className="relative z-10 overflow-hidden border-t border-white/5 px-6 py-20 text-center">
+      {/* <section className="relative z-10 overflow-hidden border-t border-white/5 px-6 py-20 text-center">
         <div
           className="pointer-events-none absolute inset-0"
           style={{ background: "radial-gradient(ellipse at 50% 50%, rgba(186,27,93,0.18) 0%, transparent 65%)" }}
@@ -177,7 +177,7 @@ export default async function HomePage() {
             Contactar a la agencia <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
-      </section>
+      </section> */}
     </div>
   );
 }

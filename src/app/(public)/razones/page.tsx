@@ -24,9 +24,9 @@ const RAZONES = [
 
 export default function RazonesPage() {
   return (
-    <div className="relative -mt-16 min-h-screen bg-black pt-16">
+    <div className="relative -mt-16 min-h-full bg-black pt-16">
       <BrandBackground />
-      <div className="relative z-10 mx-auto max-w-2xl px-6 py-16 sm:py-20">
+      <div className="relative z-10 mx-auto max-w-4xl px-6 py-16 sm:py-24">
         <BrandPageHero
           eyebrow="Est. 2016 — México & Colombia"
           title={
@@ -51,7 +51,7 @@ export default function RazonesPage() {
             ¡Garantizado!
           </p>
           <div className="h-px w-12 bg-gold-500 shadow-[0_0_18px_rgba(186,27,93,0.5)]" />
-          <p className="max-w-md text-[11px] leading-relaxed tracking-[0.12em] text-white/60 uppercase">
+          <p className="max-w-lg text-sm leading-relaxed tracking-[0.1em] text-white/60 uppercase sm:text-base">
             Tu evento en manos profesionales. Respuesta rápida, perfiles verificados y coordinación real el día del
             evento.
           </p>

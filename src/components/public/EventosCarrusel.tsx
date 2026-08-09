@@ -16,9 +16,6 @@ export function EventosCarrusel({
   return (
     <section className="relative z-10 py-4">
       <div className="mx-auto mb-10 max-w-6xl px-6 text-center">
-        <p className="mb-2 text-[11px] font-semibold tracking-[0.32em] text-white/50 uppercase">
-          Eventos
-        </p>
         <h2 className="text-2xl font-light tracking-tight text-white sm:text-3xl">
           Algunos de nuestros eventos
         </h2>

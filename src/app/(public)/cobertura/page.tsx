@@ -32,9 +32,9 @@ const MUNICIPIOS_CO = [
 
 export default function CoberturaPage() {
   return (
-    <div className="relative -mt-16 min-h-screen bg-black pt-16">
+    <div className="relative -mt-16 min-h-full bg-black pt-16">
       <BrandBackground />
-      <div className="relative z-10 mx-auto max-w-3xl px-6 py-16 sm:py-20">
+      <div className="relative z-10 mx-auto max-w-4xl px-6 py-16 sm:py-24">
         <BrandPageHero
           eyebrow="Est. 2016 — México & Colombia"
           title="Cobertura"
@@ -43,13 +43,13 @@ export default function CoberturaPage() {
 
         <div className="flex flex-col gap-4">
           <AccordionCard title={`México — ${CIUDADES_MX.length} ciudades`}>
-            <p className="mb-3 text-[10.5px] tracking-[0.1em] text-white/45 uppercase">
+            <p className="mb-3 text-xs tracking-[0.08em] text-white/45 uppercase sm:text-sm">
               Ciudades donde tenemos coordinadores y personal local:
             </p>
             <BulletList items={CIUDADES_MX} twoCol />
           </AccordionCard>
           <AccordionCard title={`Colombia — Valle de Aburrá, ${MUNICIPIOS_CO.length} municipios`} defaultOpen>
-            <p className="mb-3 text-[10.5px] tracking-[0.1em] text-white/45 uppercase">
+            <p className="mb-3 text-xs tracking-[0.08em] text-white/45 uppercase sm:text-sm">
               Municipios en Antioquia donde contamos con coordinación y personal local:
             </p>
             <BulletList items={MUNICIPIOS_CO} twoCol />

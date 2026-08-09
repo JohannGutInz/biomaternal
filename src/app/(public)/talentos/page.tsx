@@ -11,7 +11,7 @@ export default async function TalentsPage() {
   ]);
 
   return (
-    <div className="relative -mt-16 min-h-screen bg-black pt-16">
+    <div className="relative -mt-16 min-h-full bg-black pt-16">
       <BrandBackground />
       <div className="relative z-10 mx-auto max-w-7xl px-6 py-14 sm:py-16">
         <div className="mb-10 text-center">

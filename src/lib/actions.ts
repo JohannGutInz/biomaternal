@@ -1,7 +1,7 @@
 "use server";
 
 import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
+import { redirect, unauthorized, forbidden } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import * as bcrypt from "bcrypt";
 import { prisma } from "@/db";
@@ -40,6 +40,21 @@ export interface ActionState {
 
 export async function hashPassword(password: string) {
   return bcrypt.hash(password, 10);
+}
+
+// Gate for every backoffice mutation action below. The `(private)` layout
+// only protects page renders — a Server Action is invocable directly by its
+// action id (POST + `Next-Action` header) without ever going through the
+// layout, so each mutation must check the session itself.
+async function requireAdmin() {
+  const cookieStore = await cookies();
+  const token = cookieStore.get(SESSION_COOKIE);
+  const session = token ? await verifySessionToken(token.value) : null;
+
+  if (!session) unauthorized();
+  if (session.role !== "ADMIN") forbidden();
+
+  return session;
 }
 
 // ---------- Staff session (backoffice) ----------
@@ -195,6 +210,8 @@ export async function moderateKycAction(
   decision: "APPROVED" | "REJECTED" | "REQUIRES_CHANGES",
   formData: FormData,
 ) {
+  await requireAdmin();
+
   const result = moderateKycSchema.safeParse({
     modelId,
     decision,
@@ -229,6 +246,8 @@ export async function moderateKycAction(
 // ---------- Catalogs (categories) ----------
 
 export async function createCategoryAction(data: CategoryData): Promise<ActionState> {
+  await requireAdmin();
+
   const existing = await prisma.category.findFirst({
     where: { name: { equals: data.name, mode: "insensitive" } },
   });
@@ -243,6 +262,8 @@ export async function createCategoryAction(data: CategoryData): Promise<ActionSt
 }
 
 export async function toggleCategoryEnabledAction(id: string, enabled: boolean): Promise<void> {
+  await requireAdmin();
+
   await prisma.category.update({ where: { id }, data: { enabled } });
   revalidatePath("/app/catalogs");
 }
@@ -250,6 +271,8 @@ export async function toggleCategoryEnabledAction(id: string, enabled: boolean):
 // ---------- Catalogs (activities) ----------
 
 export async function createActivityAction(data: CategoryData): Promise<ActionState> {
+  await requireAdmin();
+
   const existing = await prisma.activity.findFirst({
     where: { name: { equals: data.name, mode: "insensitive" } },
   });
@@ -264,6 +287,8 @@ export async function createActivityAction(data: CategoryData): Promise<ActionSt
 }
 
 export async function toggleActivityEnabledAction(id: string, enabled: boolean): Promise<void> {
+  await requireAdmin();
+
   await prisma.activity.update({ where: { id }, data: { enabled } });
   revalidatePath("/app/catalogs");
 }
@@ -271,6 +296,8 @@ export async function toggleActivityEnabledAction(id: string, enabled: boolean):
 // ---------- Site settings (backoffice) ----------
 
 export async function saveSiteSettingsAction(data: SettingsData): Promise<void> {
+  await requireAdmin();
+
   siteSettings.agencyName = data.agencyName;
   siteSettings.primaryColor = data.primaryColor;
   siteSettings.heroTitle = data.heroTitle;
@@ -284,12 +311,16 @@ export async function saveSiteSettingsAction(data: SettingsData): Promise<void> 
 }
 
 export async function togglePublicRegistrationAction(active: boolean) {
+  await requireAdmin();
+
   siteSettings.publicRegistrationActive = active;
   revalidatePath("/configuracion");
   revalidatePath("/");
 }
 
 export async function regenerateRegistrationLinkAction() {
+  await requireAdmin();
+
   siteSettings.registrationLinkSlug = `registro-glamour-${Math.random().toString(36).slice(2, 8)}`;
   revalidatePath("/configuracion");
   revalidatePath("/");
@@ -439,6 +470,8 @@ export async function updateOwnModelProfileAction(data: OwnModelProfileData): Pr
 // ---------- Model admin edit ----------
 
 export async function updateModelAttributesAction(modelId: string, data: ModelEditData): Promise<ActionState> {
+  await requireAdmin();
+
   const result = modelEditSchema.safeParse(data);
   if (!result.success) {
     return { status: "error", message: "Datos inválidos." };
@@ -520,6 +553,8 @@ export async function updateModelAttributesAction(modelId: string, data: ModelEd
 }
 
 export async function toggleModelVisibilityAction(modelId: string, hiddenFromCatalog: boolean): Promise<ActionState> {
+  await requireAdmin();
+
   await prisma.model.update({
     where: { id: modelId },
     data: { hiddenFromCatalog },
@@ -534,6 +569,8 @@ export async function toggleModelVisibilityAction(modelId: string, hiddenFromCat
 // ---------- Convocatorias ----------
 
 export async function crearConvocatoriaAction(data: ConvocatoriaFormData): Promise<ActionState & { id?: string }> {
+  await requireAdmin();
+
   const parsed = convocatoriaSchema.safeParse(data);
   if (!parsed.success) {
     return { status: "error", message: "Datos inválidos." };
@@ -560,6 +597,8 @@ export async function crearConvocatoriaAction(data: ConvocatoriaFormData): Promi
 }
 
 export async function editarConvocatoriaAction(id: string, data: ConvocatoriaFormData): Promise<ActionState> {
+  await requireAdmin();
+
   const parsed = convocatoriaSchema.safeParse(data);
   if (!parsed.success) {
     return { status: "error", message: "Datos inválidos." };
@@ -587,6 +626,8 @@ export async function editarConvocatoriaAction(id: string, data: ConvocatoriaFor
 }
 
 export async function publicarConvocatoriaAction(id: string): Promise<void> {
+  await requireAdmin();
+
   const conv = await prisma.convocatoria.update({
     where: { id },
     data: { status: "OPEN", publishedAt: new Date() },
@@ -602,12 +643,16 @@ export async function publicarConvocatoriaAction(id: string): Promise<void> {
 }
 
 export async function cerrarConvocatoriaAction(id: string): Promise<void> {
+  await requireAdmin();
+
   await prisma.convocatoria.update({ where: { id }, data: { status: "CLOSED" } });
   revalidatePath(APP_ROUTE.app.convocatorias.index);
   revalidatePath(APP_ROUTE.app.convocatorias.detail(id));
 }
 
 export async function eliminarConvocatoriaAction(id: string): Promise<void> {
+  await requireAdmin();
+
   await prisma.convocatoria.delete({ where: { id } });
   revalidatePath(APP_ROUTE.app.convocatorias.index);
   redirect(APP_ROUTE.app.convocatorias.index);
@@ -616,6 +661,8 @@ export async function eliminarConvocatoriaAction(id: string): Promise<void> {
 // ---------- Paquetes (real) ----------
 
 export async function crearPaqueteAction(data: unknown): Promise<ActionState & { paqueteId?: string }> {
+  await requireAdmin();
+
   const parsed = z.object({
     name: z.string().min(1),
     description: z.string().optional(),
@@ -634,6 +681,8 @@ export async function crearPaqueteAction(data: unknown): Promise<ActionState & {
 }
 
 export async function agregarModeloAPaqueteAction(paqueteId: string, modeloId: string): Promise<void> {
+  await requireAdmin();
+
   await prisma.package.update({
     where: { id: paqueteId },
     data: { models: { connect: { id: modeloId } } },
@@ -642,6 +691,8 @@ export async function agregarModeloAPaqueteAction(paqueteId: string, modeloId: s
 }
 
 export async function quitarModeloDelPaqueteAction(paqueteId: string, modeloId: string): Promise<void> {
+  await requireAdmin();
+
   await prisma.package.update({
     where: { id: paqueteId },
     data: { models: { disconnect: { id: modeloId } } },
@@ -650,6 +701,8 @@ export async function quitarModeloDelPaqueteAction(paqueteId: string, modeloId: 
 }
 
 export async function renombrarPaqueteAction(paqueteId: string, data: unknown): Promise<ActionState> {
+  await requireAdmin();
+
   const parsed = z.object({
     name: z.string().min(1, "El nombre del paquete es obligatorio."),
   }).safeParse(data);
@@ -665,6 +718,8 @@ export async function cambiarStatusPaqueteAction(
   paqueteId: string,
   status: "DRAFT" | "SENT" | "CLOSED",
 ): Promise<void> {
+  await requireAdmin();
+
   await prisma.package.update({ where: { id: paqueteId }, data: { status } });
   revalidatePath(`${APP_ROUTE.app.packages.index}/${paqueteId}`);
   revalidatePath(APP_ROUTE.app.packages.index);
@@ -714,6 +769,8 @@ export async function marcarConvocatoriasVistaAction(): Promise<void> {
 export async function crearModeloAdminAction(
   _data: unknown,
 ): Promise<ActionState & { modelId?: string }> {
+  await requireAdmin();
+
   return { status: "error", message: "Not implemented" };
 }
 
@@ -732,6 +789,8 @@ const crearEventoFotoSchema = z.object({
 // quality) and publishes it by hand via toggleEventoFotoPublishedAction, which
 // stays the single gatekeeper for the 12-photo cap. No parallel path skips it.
 export async function crearEventoFotoAction(data: unknown): Promise<ActionState> {
+  await requireAdmin();
+
   const parsed = crearEventoFotoSchema.safeParse(data);
   if (!parsed.success) {
     return { status: "error", message: parsed.error.issues[0]?.message ?? "Datos inválidos." };
@@ -755,6 +814,8 @@ export async function crearEventoFotoAction(data: unknown): Promise<ActionState>
 
 // `orderedIds` is the full new order (top to bottom); position = array index.
 export async function reordenarEventoFotosAction(orderedIds: string[]): Promise<void> {
+  await requireAdmin();
+
   await prisma.$transaction(
     orderedIds.map((id, position) => prisma.eventoFoto.update({ where: { id }, data: { position } })),
   );
@@ -767,6 +828,8 @@ export async function reordenarEventoFotosAction(orderedIds: string[]): Promise<
 class EventoFotoPublishCapError extends Error {}
 
 export async function toggleEventoFotoPublishedAction(id: string, published: boolean): Promise<ActionState> {
+  await requireAdmin();
+
   try {
     // Count + update run inside one Serializable transaction so two admins
     // (or two fast clicks) publishing near-simultaneously can't both read
@@ -800,6 +863,8 @@ export async function toggleEventoFotoPublishedAction(id: string, published: boo
 }
 
 export async function eliminarEventoFotoAction(id: string): Promise<void> {
+  await requireAdmin();
+
   const foto = await prisma.eventoFoto.findUnique({ where: { id }, select: { url: true } });
   if (!foto) return;
 
@@ -820,6 +885,8 @@ export async function eliminarEventoFotoAction(id: string): Promise<void> {
 // this alt today (EventosCarrusel uses a fixed "Evento realizado por {agencia}"
 // string — see public-data.ts), so this only affects the admin table for now.
 export async function actualizarEventoFotoAltAction(id: string, alt: string): Promise<ActionState> {
+  await requireAdmin();
+
   const trimmed = alt.trim();
   if (!trimmed) {
     return { status: "error", message: "El texto alternativo es obligatorio." };

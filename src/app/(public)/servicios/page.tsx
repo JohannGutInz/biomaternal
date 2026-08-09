@@ -34,9 +34,9 @@ const SERVICIOS_CO = [
 
 export default function ServiciosPage() {
   return (
-    <div className="relative -mt-16 min-h-screen bg-black pt-16">
+    <div className="relative -mt-16 min-h-full bg-black pt-16">
       <BrandBackground />
-      <div className="relative z-10 mx-auto max-w-2xl px-6 py-16 sm:py-20">
+      <div className="relative z-10 mx-auto max-w-4xl px-6 py-16 sm:py-24">
         <BrandPageHero
           eyebrow="Est. 2016 — México & Colombia"
           title="Servicios"

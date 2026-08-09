@@ -15,11 +15,8 @@ export function ClientesCarrusel() {
   return (
     <section className="py-20">
       <div className="mx-auto mb-10 max-w-6xl px-6 text-center">
-        <p className="mb-2 text-[11px] font-semibold tracking-[0.32em] text-white/50 uppercase">
-          Clientes
-        </p>
         <h2 className="text-2xl font-light tracking-tight text-white sm:text-3xl">
-          Marcas que confían en nosotros
+         Clientes
         </h2>
       </div>
 

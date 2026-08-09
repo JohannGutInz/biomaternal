@@ -38,10 +38,12 @@ function getSessionSecret() {
 		process.env.SESSION_JWT_SECRET ??
 		process.env.AUTH_SECRET ??
 		process.env.NEXTAUTH_SECRET ??
-		(process.env.NODE_ENV !== "production" ? "backoffice-models-dev-session-secret" : "dummy-secret");
+		(process.env.NODE_ENV !== "production" ? "backoffice-models-dev-session-secret" : undefined);
 
 	if (!secret) {
-		throw new Error("SESSION_JWT_SECRET is not configured.");
+		throw new Error(
+			"SESSION_JWT_SECRET (or AUTH_SECRET / NEXTAUTH_SECRET) is not configured. Refusing to start with an unsigned/dummy session secret in production.",
+		);
 	}
 
 	return secret;

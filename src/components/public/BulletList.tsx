@@ -4,9 +4,9 @@ export function BulletList({ items, twoCol = false }: { items: string[]; twoCol?
       {items.map((item) => (
         <li
           key={item}
-          className="relative rounded-lg bg-white/5 py-2.5 pr-3.5 pl-6 text-[12.5px] leading-snug text-white/85"
+          className="relative rounded-lg bg-white/5 py-3 pr-4 pl-7 text-sm leading-snug text-white/85 sm:text-base"
         >
-          <span className="absolute top-3.5 left-2.5 h-1.5 w-1.5 rounded-full bg-gold-500 shadow-[0_0_8px_rgba(186,27,93,0.7)]" />
+          <span className="absolute top-1/2 left-3 h-1.5 w-1.5 -translate-y-1/2 rounded-full bg-gold-500 shadow-[0_0_8px_rgba(186,27,93,0.7)]" />
           {item}
         </li>
       ))}

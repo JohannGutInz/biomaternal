@@ -54,19 +54,19 @@ const NAV_COL_3 = [
 
 export function PublicFooter({ agencyName }: { agencyName: string }) {
   return (
-    <footer className="bg-zinc-950 text-zinc-400">
+    <footer className="relative z-10 bg-zinc-950 text-zinc-400">
       {/* Main footer */}
-      <div className="mx-auto max-w-6xl px-6 py-16">
-        <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="mx-auto max-w-6xl px-6 py-8">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-5">
           {/* Brand */}
           <div className="lg:col-span-2">
             <span className="text-xl font-semibold tracking-tight text-white">
               {agencyName}
             </span>
-            <p className="mt-3 max-w-xs text-sm leading-relaxed text-zinc-400">
+            <p className="mt-2 max-w-xs text-sm leading-relaxed text-zinc-400">
               Agencia de representación de modelos, edecanes y talento profesional para eventos, campañas y producciones.
             </p>
-            <div className="mt-6 flex items-center gap-4">
+            <div className="mt-3 flex items-center gap-4">
               {SOCIAL.map(({ href, label, Icon }) => (
                 <a
                   key={label}
@@ -84,8 +84,8 @@ export function PublicFooter({ agencyName }: { agencyName: string }) {
 
           {/* Nav col 1 */}
           <div>
-            <p className="mb-4 text-xs font-semibold tracking-widest text-zinc-500 uppercase">Explorar</p>
-            <ul className="space-y-2.5">
+            <p className="mb-2 text-xs font-semibold tracking-widest text-zinc-500 uppercase">Explorar</p>
+            <ul className="space-y-1.5">
               {NAV_COL_1.map((link) => (
                 <li key={link.href}>
                   <Link
@@ -101,8 +101,8 @@ export function PublicFooter({ agencyName }: { agencyName: string }) {
 
           {/* Nav col 2 — Conócenos */}
           <div>
-            <p className="mb-4 text-xs font-semibold tracking-widest text-zinc-500 uppercase">Conócenos</p>
-            <ul className="space-y-2.5">
+            <p className="mb-2 text-xs font-semibold tracking-widest text-zinc-500 uppercase">Conócenos</p>
+            <ul className="space-y-1.5">
               {NAV_COL_2.map((link) => (
                 <li key={link.href}>
                   <Link
@@ -118,8 +118,8 @@ export function PublicFooter({ agencyName }: { agencyName: string }) {
 
           {/* Nav col 3 — Empresa */}
           <div>
-            <p className="mb-4 text-xs font-semibold tracking-widest text-zinc-500 uppercase">Empresa</p>
-            <ul className="space-y-2.5">
+            <p className="mb-2 text-xs font-semibold tracking-widest text-zinc-500 uppercase">Empresa</p>
+            <ul className="space-y-1.5">
               {NAV_COL_3.map((link) => (
                 <li key={link.href}>
                   <Link
@@ -146,7 +146,7 @@ export function PublicFooter({ agencyName }: { agencyName: string }) {
       </div>
 
       {/* Bottom bar */}
-      <div className="border-t border-white/5 px-6 py-4">
+      <div className="border-t border-white/5 px-6 py-3">
         <p className="text-center text-xs text-zinc-600">
           © {new Date().getFullYear()} {agencyName}. Todos los derechos reservados.
         </p>
