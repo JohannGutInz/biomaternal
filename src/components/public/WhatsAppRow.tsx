@@ -5,14 +5,14 @@ const WHATSAPP_CONTACTS = [
 
 export function WhatsAppRow() {
   return (
-    <div className="mt-14 flex flex-wrap items-center justify-center gap-3.5">
+    <div className="mt-8 flex flex-wrap items-center justify-center gap-3.5">
       {WHATSAPP_CONTACTS.map((c) => (
         <a
           key={c.number}
           href={`https://wa.me/${c.number}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-2.5 rounded-full border border-white/15 bg-black/70 px-6 py-3 text-sm text-white backdrop-blur-md transition-colors hover:border-white/30 hover:bg-black/85"
+          className="inline-flex items-center gap-2.5 rounded-full border border-white/22 bg-black/72 px-[26px] py-3 text-sm tracking-[0.04em] text-white backdrop-blur-md transition-all hover:-translate-y-px hover:border-white/35 hover:bg-black/88"
         >
           <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-emerald-500" aria-hidden />
           WhatsApp {c.flag} {c.display}

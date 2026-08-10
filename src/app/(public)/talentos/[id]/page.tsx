@@ -61,7 +61,7 @@ export default async function TalentDetailPage({
           {/* Info */}
           <div className="lg:col-span-2">
             {model.categories.length > 0 && (
-              <p className="text-xs font-semibold tracking-[0.2em] text-gold-400 uppercase">
+              <p className="text-xs font-semibold tracking-[0.2em] text-glam-400 uppercase">
                 {model.categories.join(" · ")}
               </p>
             )}
@@ -137,7 +137,7 @@ export default async function TalentDetailPage({
             {/* CTA */}
             <Link
               href={`/contacto?modelo=${encodeURIComponent(name)}`}
-              className="mt-8 inline-flex items-center gap-2 rounded-full bg-gold-500 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-gold-600"
+              className="mt-8 inline-flex items-center gap-2 rounded-full bg-glam-500 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-glam-600"
             >
               Contactar a la agencia sobre {model.firstName}
               <ArrowRight className="h-4 w-4" />

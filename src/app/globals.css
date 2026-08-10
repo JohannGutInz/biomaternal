@@ -22,6 +22,20 @@
   --color-gold-700: #821341;
   --color-gold-800: #660f33;
   --color-gold-900: #4a0b25;
+
+  /* Rosa exacto del bosquejo del cliente (#E9006E) — solo para el sitio público
+     rediseñado (src/app/(public)/**). No reemplaza gold-*, que sigue en uso en
+     el panel admin y en src/components/ui/. */
+  --color-glam-50: #fdf2f7;
+  --color-glam-100: #fbdcea;
+  --color-glam-200: #f7aed0;
+  --color-glam-300: #f37fb5;
+  --color-glam-400: #ef3a91;
+  --color-glam-500: #e9006e;
+  --color-glam-600: #c4005e;
+  --color-glam-700: #99004a;
+  --color-glam-800: #720337;
+  --color-glam-900: #4d0426;
 }
 
 body {

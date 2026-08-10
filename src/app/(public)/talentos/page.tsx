@@ -21,7 +21,7 @@ export default async function TalentsPage() {
           <h1 className="text-4xl font-light tracking-[0.06em] text-white sm:text-5xl">
             Catálogo de talento
           </h1>
-          <div className="mx-auto mt-5 h-px w-12 bg-gold-500" />
+          <div className="mx-auto mt-5 h-px w-12 bg-glam-500" />
           <p className="mx-auto mt-5 max-w-xl text-xs tracking-[0.08em] text-white/50 uppercase">
             Filtra por país, perfil, actividad y ubicación
           </p>

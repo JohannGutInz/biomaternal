@@ -13,7 +13,7 @@ export function BrandPageHero({
       <h1 className="text-5xl leading-[0.95] font-bold tracking-[0.08em] text-white uppercase sm:text-6xl lg:text-7xl">
         {title}
       </h1>
-      <div className="mt-6 h-px w-16 bg-gold-500 shadow-[0_0_18px_rgba(186,27,93,0.5)]" />
+      <div className="mt-6 h-px w-16 bg-glam-500 shadow-[0_0_18px_rgba(233,0,110,0.5)]" />
       <p className="mx-auto mt-6 max-w-2xl text-xs leading-relaxed tracking-[0.12em] text-white/55 uppercase sm:text-sm">
         {description}
       </p>

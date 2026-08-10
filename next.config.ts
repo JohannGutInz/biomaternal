@@ -29,6 +29,9 @@ const nextConfig: NextConfig = {
   },
   images: {
     remotePatterns: remotePattern ? [remotePattern] : [],
+    // Default allow-list is just [75] — BrandBackground needs a higher quality
+    // to avoid visible compression artifacts on the full-viewport hero image.
+    qualities: [75, 92],
   },
 };
 

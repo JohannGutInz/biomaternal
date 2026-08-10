@@ -1,8 +1,15 @@
+import type { Metadata } from "next";
 import { AccordionCard } from "@/components/public/AccordionCard";
 import { BulletList } from "@/components/public/BulletList";
 import { BrandBackground } from "@/components/public/BrandBackground";
 import { BrandPageHero } from "@/components/public/BrandPageHero";
 import { WhatsAppRow } from "@/components/public/WhatsAppRow";
+
+export const metadata: Metadata = {
+  title: "Cobertura - Glamour Models",
+  description:
+    "Ciudades y municipios donde contamos con coordinación y personal local — no subcontratamos agencias.",
+};
 
 const CIUDADES_MX = [
   "Acaponeta, Nay.", "Actopan, Hgo.", "Aguascalientes, Ags.", "Altata, Sin.", "Arteaga, Coah.",
@@ -34,25 +41,26 @@ export default function CoberturaPage() {
   return (
     <div className="relative -mt-16 min-h-full bg-black pt-16">
       <BrandBackground />
-      <div className="relative z-10 mx-auto max-w-4xl px-6 py-16 sm:py-24">
+      <div className="relative z-10 mx-auto max-w-6xl px-6 py-16 sm:py-24">
         <BrandPageHero
           eyebrow="Est. 2016 — México & Colombia"
           title="Cobertura"
           description="Ciudades y municipios donde contamos con coordinación y personal local — no subcontratamos agencias"
         />
 
-        <div className="flex flex-col gap-4">
-          <AccordionCard title={`México — ${CIUDADES_MX.length} ciudades`}>
+        <div className="mx-auto flex w-full max-w-[420px] flex-col gap-4">
+          <AccordionCard title="México">
             <p className="mb-3 text-xs tracking-[0.08em] text-white/45 uppercase sm:text-sm">
-              Ciudades donde tenemos coordinadores y personal local:
+              Estas son las más de {CIUDADES_MX.length} ciudades donde tenemos coordinadores locales y personal
+              local (no subcontratamos agencias):
             </p>
-            <BulletList items={CIUDADES_MX} twoCol />
+            <BulletList items={CIUDADES_MX} />
           </AccordionCard>
-          <AccordionCard title={`Colombia — Valle de Aburrá, ${MUNICIPIOS_CO.length} municipios`} defaultOpen>
+          <AccordionCard title="Colombia">
             <p className="mb-3 text-xs tracking-[0.08em] text-white/45 uppercase sm:text-sm">
               Municipios en Antioquia donde contamos con coordinación y personal local:
             </p>
-            <BulletList items={MUNICIPIOS_CO} twoCol />
+            <BulletList items={MUNICIPIOS_CO} />
           </AccordionCard>
         </div>
 

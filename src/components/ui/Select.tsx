@@ -3,12 +3,13 @@ import { cn } from "@/lib/utils";
 
 type SelectProps = React.SelectHTMLAttributes<HTMLSelectElement> & {
   label?: string;
+  labelClassName?: string;
   error?: string;
   placeholder?: string;
 };
 
 export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select(
-  { label, error, placeholder, id, className, children, ...props },
+  { label, labelClassName, error, placeholder, id, className, children, ...props },
   ref,
 ) {
   const generatedId = useId();
@@ -16,7 +17,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
   return (
     <div>
       {label && (
-        <label htmlFor={selectId} className="mb-1.5 block text-sm font-medium text-zinc-700">
+        <label htmlFor={selectId} className={cn("mb-1.5 block text-sm font-medium text-zinc-700", labelClassName)}>
           {label}
         </label>
       )}

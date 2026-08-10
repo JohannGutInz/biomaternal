@@ -1,13 +1,19 @@
+import type { Metadata } from "next";
 import { AccordionCard } from "@/components/public/AccordionCard";
 import { BrandBackground } from "@/components/public/BrandBackground";
 import { BrandPageHero } from "@/components/public/BrandPageHero";
 import { WhatsAppRow } from "@/components/public/WhatsAppRow";
 
+export const metadata: Metadata = {
+  title: "Filosofía, Misión y Visión - Glamour Models",
+  description: "Lo que somos, lo que hacemos y hacia dónde vamos.",
+};
+
 export default function MisionVisionPage() {
   return (
     <div className="relative -mt-16 min-h-full bg-black pt-16">
       <BrandBackground />
-      <div className="relative z-10 mx-auto max-w-4xl px-6 py-16 sm:py-24">
+      <div className="relative z-10 mx-auto max-w-6xl px-6 py-16 sm:py-24">
         <BrandPageHero
           eyebrow="Est. 2016 — México & Colombia"
           title={
@@ -20,9 +26,9 @@ export default function MisionVisionPage() {
           description="Lo que somos, lo que hacemos y hacia dónde vamos"
         />
 
-        <div className="flex flex-col gap-4">
-          <AccordionCard title="Nuestra filosofía" defaultOpen>
-            <div className="flex flex-col gap-3">
+        <div className="mx-auto flex w-full max-w-[640px] flex-col gap-4">
+          <AccordionCard title="Nuestra filosofía" tone="plain">
+            <div className="flex flex-col items-center gap-3 text-center">
               <p>En Glamour Models somos obsesivos con tres cosas:</p>
               <p className="leading-loose">
                 1. Cumplir lo que prometemos.
@@ -40,15 +46,15 @@ export default function MisionVisionPage() {
             </div>
           </AccordionCard>
 
-          <AccordionCard title="Nuestra misión" defaultOpen>
-            <p>
+          <AccordionCard title="Nuestra misión" tone="plain">
+            <p className="text-center">
               Brindar personal de imagen profesional con excelente presencia, puntualidad y actitud, ofreciendo a
               nuestros clientes un servicio rápido, confiable y de calidad en todo México y Colombia.
             </p>
           </AccordionCard>
 
-          <AccordionCard title="Nuestra visión" defaultOpen>
-            <p>
+          <AccordionCard title="Nuestra visión" tone="plain">
+            <p className="text-center">
               Convertirnos en la agencia de referencia en México y Latinoamérica, reconocida por nuestra rapidez de
               respuesta, seriedad y por entregar siempre el perfil exacto que cada cliente necesita.
             </p>

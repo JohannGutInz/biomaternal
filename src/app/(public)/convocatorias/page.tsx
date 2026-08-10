@@ -35,7 +35,7 @@ export default async function ConvocatoriasPublicasPage() {
                         {c.tipo}
                       </span>
                     </div>
-                    <p className="font-medium text-white group-hover:text-gold-400 truncate">{c.titulo}</p>
+                    <p className="font-medium text-white group-hover:text-glam-400 truncate">{c.titulo}</p>
                     <div className="mt-1.5 flex flex-wrap items-center gap-3 text-xs text-white/55">
                       <span className="flex items-center gap-1">
                         <Calendar className="h-3.5 w-3.5" />
@@ -48,7 +48,7 @@ export default async function ConvocatoriasPublicasPage() {
                       <span className="font-medium text-white/70">{c.pago}</span>
                     </div>
                   </div>
-                  <ChevronRight className="relative h-5 w-5 shrink-0 text-white/35 group-hover:text-gold-400" />
+                  <ChevronRight className="relative h-5 w-5 shrink-0 text-white/35 group-hover:text-glam-400" />
                 </Link>
               </li>
             ))}

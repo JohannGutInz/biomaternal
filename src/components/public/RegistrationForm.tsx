@@ -26,6 +26,15 @@ interface Props {
   categories: Category[];
 }
 
+// Shared field theme — the ui/ primitives are light by default (also used by
+// the admin backoffice), so instead of editing them we override per-instance
+// with Tailwind's `!important` modifier (cn() here is plain clsx, no
+// tailwind-merge, so a plain override class wouldn't reliably win).
+const fieldCls =
+  "!border-white/14 !bg-white/6 !text-white placeholder:!text-white/30 focus:!border-glam-500 focus:!ring-glam-500";
+const labelCls = "!text-[10.5px] !font-bold !tracking-[0.16em] !text-white/55 !uppercase";
+const checkboxLabelCls = "!text-white/78";
+
 function generateCaptcha() {
   return { a: 1 + Math.floor(Math.random() * 8), b: 1 + Math.floor(Math.random() * 8) };
 }
@@ -133,7 +142,7 @@ export function RegistrationForm({ maxDate, countries, states, municipalities, c
 
   if (success) {
     return (
-      <div className="flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-5 text-sm text-emerald-800">
+      <div className="flex items-start gap-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-5 text-sm text-emerald-300">
         <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0" />
         <p>{success}</p>
       </div>
@@ -145,10 +154,12 @@ export function RegistrationForm({ maxDate, countries, states, municipalities, c
       <section>
         <SectionTitle>Datos personales</SectionTitle>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Input label="Nombre(s)" {...register("firstName")} error={errors.firstName?.message} />
+          <Input label="Nombre(s)" labelClassName={labelCls} className={fieldCls} {...register("firstName")} error={errors.firstName?.message} />
 
           <Input
             label="Apellido paterno"
+            labelClassName={labelCls}
+            className={fieldCls}
             {...register("paternalLastName")}
             error={errors.paternalLastName?.message}
           />
@@ -156,33 +167,46 @@ export function RegistrationForm({ maxDate, countries, states, municipalities, c
           <div className="sm:col-span-2">
             <Input
               label="Apellido materno (opcional)"
+              labelClassName={labelCls}
+              className={fieldCls}
               {...register("maternalLastName")}
               error={errors.maternalLastName?.message}
             />
           </div>
 
-          <Input label="Correo" type="email" {...register("email")} error={errors.email?.message} />
+          <Input label="Correo" type="email" labelClassName={labelCls} className={fieldCls} {...register("email")} error={errors.email?.message} />
 
-          <Input label="Teléfono" {...register("phone")} error={errors.phone?.message} />
+          <Input label="Teléfono" labelClassName={labelCls} className={fieldCls} {...register("phone")} error={errors.phone?.message} />
 
           <div>
-            <Input label="Contraseña" type="password" {...register("password")} error={errors.password?.message} />
-            <p className="mt-1 text-xs text-zinc-400">Úsala para acceder a tu perfil más adelante.</p>
+            <Input
+              label="Contraseña"
+              type="password"
+              labelClassName={labelCls}
+              className={fieldCls}
+              {...register("password")}
+              error={errors.password?.message}
+            />
+            <p className="mt-1 text-xs text-white/40">Úsala para acceder a tu perfil más adelante.</p>
           </div>
 
           <div>
             <Input
               label="Fecha de nacimiento"
               type="date"
+              labelClassName={labelCls}
+              className={fieldCls}
               {...register("birthDate")}
               max={maxDate}
               error={errors.birthDate?.message}
             />
-            <p className="mt-1 text-xs text-zinc-400">Solo aceptamos talento mayor de edad.</p>
+            <p className="mt-1 text-xs text-white/40">Solo aceptamos talento mayor de edad.</p>
           </div>
 
           <Select
             label="Género"
+            labelClassName={labelCls}
+            className={fieldCls}
             {...register("gender")}
             defaultValue=""
             placeholder="Selecciona…"
@@ -205,6 +229,8 @@ export function RegistrationForm({ maxDate, countries, states, municipalities, c
                 <Select
                   {...field}
                   label="País"
+                  labelClassName={labelCls}
+                  className={fieldCls}
                   placeholder="Selecciona un país…"
                   error={errors.countryId?.message}
                   onChange={(e) => {
@@ -229,6 +255,8 @@ export function RegistrationForm({ maxDate, countries, states, municipalities, c
                 <Select
                   {...field}
                   label="Nacionalidad"
+                  labelClassName={labelCls}
+                  className={fieldCls}
                   placeholder="Selecciona una nacionalidad…"
                   error={errors.nationalityId?.message}
                 >
@@ -247,6 +275,8 @@ export function RegistrationForm({ maxDate, countries, states, municipalities, c
               <Select
                 {...field}
                 label="Estado"
+                labelClassName={labelCls}
+                className={fieldCls}
                 disabled={!selectedCountryId}
                 placeholder={selectedCountryId ? "Selecciona un estado…" : "Primero selecciona un país"}
                 error={errors.stateId?.message}
@@ -264,6 +294,8 @@ export function RegistrationForm({ maxDate, countries, states, municipalities, c
 
           <Select
             label="Ciudad"
+            labelClassName={labelCls}
+            className={fieldCls}
             {...register("cityId")}
             disabled={!selectedStateId}
             defaultValue=""
@@ -280,21 +312,26 @@ export function RegistrationForm({ maxDate, countries, states, municipalities, c
       {categories.length > 0 && (
         <section>
           <SectionTitle>Categorías</SectionTitle>
-          <Controller
-            name="categoryIds"
-            control={control}
-            render={() => (
-              <MultiSelectPicker
-                label="¿A qué te dedicas?"
-                hint="(mínimo 1 — puedes elegir varias)"
-                options={categories}
-                selectedIds={categoryIds}
-                onChange={(ids) => setValue("categoryIds", ids, { shouldValidate: true })}
-                error={errors.categoryIds?.message}
-                placeholder="Buscar categoría…"
-              />
-            )}
-          />
+          {/* MultiSelectPicker is a shared light-theme component (also used by the
+              admin panel) with no dark-mode override hooks — rather than fork it,
+              it sits on its own light card, same pattern as /privacidad. */}
+          <div className="rounded-2xl border border-white/90 bg-white p-4">
+            <Controller
+              name="categoryIds"
+              control={control}
+              render={() => (
+                <MultiSelectPicker
+                  label="¿A qué te dedicas?"
+                  hint="(mínimo 1 — puedes elegir varias)"
+                  options={categories}
+                  selectedIds={categoryIds}
+                  onChange={(ids) => setValue("categoryIds", ids, { shouldValidate: true })}
+                  error={errors.categoryIds?.message}
+                  placeholder="Buscar categoría…"
+                />
+              )}
+            />
+          </div>
         </section>
       )}
 
@@ -304,18 +341,24 @@ export function RegistrationForm({ maxDate, countries, states, municipalities, c
           <Input
             type="number"
             label="Estatura (cm)"
+            labelClassName={labelCls}
+            className={fieldCls}
             {...register("height", { valueAsNumber: true })}
             error={errors.height?.message}
           />
           <Input
             type="number"
             label="Peso (kg)"
+            labelClassName={labelCls}
+            className={fieldCls}
             {...register("currentWeight", { valueAsNumber: true })}
             error={errors.currentWeight?.message}
           />
           <div className="hidden sm:block" />
           <Select
             label="Talla de camisa"
+            labelClassName={labelCls}
+            className={fieldCls}
             {...register("shirtSize")}
             defaultValue=""
             placeholder="Selecciona…"
@@ -327,6 +370,8 @@ export function RegistrationForm({ maxDate, countries, states, municipalities, c
           </Select>
           <Select
             label="Escala pantalón"
+            labelClassName={labelCls}
+            className={fieldCls}
             {...register("pantsSizeScale")}
             defaultValue=""
             placeholder="Selecciona…"
@@ -335,9 +380,15 @@ export function RegistrationForm({ maxDate, countries, states, municipalities, c
             <option value="MEN">Hombre</option>
             <option value="WOMEN">Mujer</option>
           </Select>
-          <Input label="Talla de pantalón" {...register("pantsSize")} error={errors.pantsSize?.message} />
+          <Input
+            label="Talla de pantalón"
+            labelClassName={labelCls}
+            className={fieldCls}
+            {...register("pantsSize")}
+            error={errors.pantsSize?.message}
+          />
           <div className="col-span-2 sm:col-span-3">
-            <Checkbox label="¿Tienes tatuajes visibles?" {...register("hasVisibleTattoos")} />
+            <Checkbox label="¿Tienes tatuajes visibles?" labelClassName={checkboxLabelCls} {...register("hasVisibleTattoos")} />
           </div>
         </div>
       </section>
@@ -345,9 +396,9 @@ export function RegistrationForm({ maxDate, countries, states, municipalities, c
       <section>
         <SectionTitle>Disponibilidad</SectionTitle>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-          <Checkbox label="Disponible para viajar" {...register("travelAvailability")} />
-          <Checkbox label="Tengo pasaporte" {...register("hasPassport")} />
-          <Checkbox label="Tengo visa" {...register("hasVisa")} />
+          <Checkbox label="Disponible para viajar" labelClassName={checkboxLabelCls} {...register("travelAvailability")} />
+          <Checkbox label="Tengo pasaporte" labelClassName={checkboxLabelCls} {...register("hasPassport")} />
+          <Checkbox label="Tengo visa" labelClassName={checkboxLabelCls} {...register("hasVisa")} />
         </div>
       </section>
 
@@ -384,26 +435,27 @@ export function RegistrationForm({ maxDate, countries, states, municipalities, c
       </section>
 
       {/* Captcha */}
-      <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-4">
+      <div className="rounded-lg border border-white/14 bg-white/6 p-4">
         {captcha ? (
           <Input
             type="number"
             label={`Verificación: ¿cuánto es ${captcha.a} + ${captcha.b}?`}
+            labelClassName={labelCls}
+            className={`w-32 py-2 ${fieldCls}`}
             {...register("captchaAnswer", { valueAsNumber: true })}
-            className="w-32 py-2"
             error={errors.captchaAnswer?.message}
           />
         ) : (
-          <p className="text-sm text-zinc-400">Cargando verificación…</p>
+          <p className="text-sm text-white/40">Cargando verificación…</p>
         )}
       </div>
 
-      {serverError && <p className="text-sm text-rose-600">{serverError}</p>}
+      {serverError && <p className="text-sm text-rose-400">{serverError}</p>}
 
       <Button
         type="submit"
         disabled={isSubmitting || !captcha}
-        className="w-full min-h-[48px] rounded-full px-5 sm:w-auto"
+        className="!w-full min-h-[48px] !rounded-full !bg-glam-500 px-5 hover:!bg-glam-600 sm:!w-auto"
       >
         {isSubmitting ? "Enviando…" : "Enviar registro"} <Send className="h-4 w-4" />
       </Button>
@@ -413,7 +465,7 @@ export function RegistrationForm({ maxDate, countries, states, municipalities, c
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <h2 className="mb-4 border-b border-zinc-200 pb-2 text-xs font-semibold tracking-widest text-zinc-400 uppercase">
+    <h2 className="mb-4 border-b border-white/15 pb-2 text-xs font-semibold tracking-widest text-white/50 uppercase">
       {children}
     </h2>
   );

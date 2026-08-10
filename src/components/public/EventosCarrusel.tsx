@@ -29,7 +29,7 @@ export function EventosCarrusel({
           {items.map((evento, i) => (
             <div
               key={`${evento.id}-${i}`}
-              className="group relative h-[300px] w-[220px] shrink-0 overflow-hidden rounded-2xl border border-white/12 bg-zinc-900 shadow-lg shadow-black/40 transition-all duration-300 hover:-translate-y-1 hover:border-gold-500/55 sm:h-[360px] sm:w-[260px]"
+              className="group relative h-[300px] w-[220px] shrink-0 overflow-hidden rounded-2xl border border-white/12 bg-zinc-900 shadow-lg shadow-black/40 transition-all duration-300 hover:-translate-y-1 hover:border-glam-500/55 sm:h-[360px] sm:w-[260px]"
             >
               <Image
                 src={evento.imageUrl}

@@ -1,7 +1,14 @@
+import type { Metadata } from "next";
 import { AccordionCard } from "@/components/public/AccordionCard";
 import { BrandBackground } from "@/components/public/BrandBackground";
 import { BrandPageHero } from "@/components/public/BrandPageHero";
 import { WhatsAppRow } from "@/components/public/WhatsAppRow";
+
+export const metadata: Metadata = {
+  title: "Historia y Evolución - Glamour Models",
+  description:
+    "De una agencia de encuestadores en CDMX a operación internacional en México y Colombia — 20 años de evolución constante.",
+};
 
 const LINEA_TIEMPO = [
   {
@@ -107,7 +114,7 @@ export default function HistoriaPage() {
   return (
     <div className="relative -mt-16 min-h-full bg-black pt-16">
       <BrandBackground />
-      <div className="relative z-10 mx-auto max-w-4xl px-6 py-16 sm:py-24">
+      <div className="relative z-10 mx-auto max-w-6xl px-6 py-16 sm:py-24">
         <BrandPageHero
           eyebrow="Est. 2005 — De InvestiMerc a Glamour Models"
           title={
@@ -120,15 +127,13 @@ export default function HistoriaPage() {
           description="De una agencia de encuestadores en CDMX a operación internacional en México y Colombia — 20 años de evolución constante"
         />
 
-        <div className="flex flex-col gap-4">
+        <div className="mx-auto flex w-full max-w-[760px] flex-col gap-[18px]">
           {LINEA_TIEMPO.map((hito, i) => (
             <AccordionCard
               key={hito.title}
               title={hito.title}
               tag={hito.tag}
-              highlightTag={hito.highlight}
-              variant={i % 2 === 0 ? "dark" : "light"}
-              defaultOpen
+              tone={i % 2 === 0 ? "solid-dark" : "solid-light"}
             >
               <p>{hito.text}</p>
             </AccordionCard>
@@ -140,7 +145,7 @@ export default function HistoriaPage() {
             De encuestadores
             <br />a internacional
           </p>
-          <div className="h-px w-16 bg-gold-500 shadow-[0_0_18px_rgba(186,27,93,0.5)]" />
+          <div className="h-px w-16 bg-glam-500 shadow-[0_0_18px_rgba(233,0,110,0.5)]" />
           <p className="max-w-lg text-sm leading-relaxed tracking-[0.1em] text-white/60 uppercase sm:text-base">
             De una agencia de encuestadores en CDMX a una operación de modelos y edecanes con alcance nacional e
             internacional (México y Colombia).

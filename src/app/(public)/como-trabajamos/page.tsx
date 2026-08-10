@@ -1,7 +1,13 @@
+import type { Metadata } from "next";
 import { AccordionCard } from "@/components/public/AccordionCard";
 import { BrandBackground } from "@/components/public/BrandBackground";
 import { BrandPageHero } from "@/components/public/BrandPageHero";
 import { WhatsAppRow } from "@/components/public/WhatsAppRow";
+
+export const metadata: Metadata = {
+  title: "¿Cómo trabajamos? - Glamour Models",
+  description: "Proceso claro, rápido y sin sorpresas — así aseguramos que todo salga perfecto.",
+};
 
 const PASOS = [
   {
@@ -34,7 +40,7 @@ export default function ComoTrabajamosPage() {
   return (
     <div className="relative -mt-16 min-h-full bg-black pt-16">
       <BrandBackground />
-      <div className="relative z-10 mx-auto max-w-4xl px-6 py-16 sm:py-24">
+      <div className="relative z-10 mx-auto max-w-6xl px-6 py-16 sm:py-24">
         <BrandPageHero
           eyebrow="Est. 2016 — México & Colombia"
           title={
@@ -47,9 +53,9 @@ export default function ComoTrabajamosPage() {
           description="Proceso claro, rápido y sin sorpresas — así aseguramos que todo salga perfecto"
         />
 
-        <div className="flex flex-col gap-4">
+        <div className="mx-auto grid w-full max-w-[1020px] grid-cols-1 items-start gap-[18px] sm:grid-cols-2 lg:grid-cols-3">
           {PASOS.map((paso, i) => (
-            <AccordionCard key={paso.title} title={paso.title} variant={i < 3 ? "dark" : "light"} defaultOpen>
+            <AccordionCard key={paso.title} title={paso.title} tone={i < 3 ? "solid-dark" : "solid-light"}>
               <p>{paso.text}</p>
             </AccordionCard>
           ))}

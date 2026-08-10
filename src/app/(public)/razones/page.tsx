@@ -1,7 +1,13 @@
+import type { Metadata } from "next";
 import { AccordionCard } from "@/components/public/AccordionCard";
 import { BrandBackground } from "@/components/public/BrandBackground";
 import { BrandPageHero } from "@/components/public/BrandPageHero";
 import { WhatsAppRow } from "@/components/public/WhatsAppRow";
+
+export const metadata: Metadata = {
+  title: "¿Por qué elegir a Glamour Models? - Glamour Models",
+  description: "4 razones claras + garantía real. Sin letras chiquitas.",
+};
 
 const RAZONES = [
   {
@@ -26,7 +32,7 @@ export default function RazonesPage() {
   return (
     <div className="relative -mt-16 min-h-full bg-black pt-16">
       <BrandBackground />
-      <div className="relative z-10 mx-auto max-w-4xl px-6 py-16 sm:py-24">
+      <div className="relative z-10 mx-auto max-w-6xl px-6 py-16 sm:py-24">
         <BrandPageHero
           eyebrow="Est. 2016 — México & Colombia"
           title={
@@ -38,9 +44,9 @@ export default function RazonesPage() {
           description="4 razones claras + garantía real. Sin letras chiquitas"
         />
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="mx-auto grid w-full max-w-[860px] grid-cols-1 items-start gap-[18px] sm:grid-cols-2">
           {RAZONES.map((razon, i) => (
-            <AccordionCard key={razon.title} title={razon.title} variant={i < 2 ? "dark" : "light"} defaultOpen>
+            <AccordionCard key={razon.title} title={razon.title} tone={i < 2 ? "solid-dark" : "solid-light"}>
               <p>{razon.text}</p>
             </AccordionCard>
           ))}
@@ -50,7 +56,7 @@ export default function RazonesPage() {
           <p className="text-[42px] leading-[0.9] font-light tracking-[0.14em] text-white uppercase [text-shadow:0_0_40px_rgba(186,27,93,0.5)] sm:text-6xl">
             ¡Garantizado!
           </p>
-          <div className="h-px w-12 bg-gold-500 shadow-[0_0_18px_rgba(186,27,93,0.5)]" />
+          <div className="h-px w-12 bg-glam-500 shadow-[0_0_18px_rgba(233,0,110,0.5)]" />
           <p className="max-w-lg text-sm leading-relaxed tracking-[0.1em] text-white/60 uppercase sm:text-base">
             Tu evento en manos profesionales. Respuesta rápida, perfiles verificados y coordinación real el día del
             evento.
