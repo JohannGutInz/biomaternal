@@ -21,7 +21,7 @@ import { Button } from "@/components/ui/Button";
 import { Card, CardHeader } from "@/components/ui/Card";
 import { Field, FieldGrid } from "@/components/ui/Field";
 import { Textarea } from "@/components/ui/Textarea";
-import { StatusBadge } from "@/components/ui/Badge";
+import { Badge, StatusBadge } from "@/components/ui/Badge";
 import {
   addDays,
   calculateAge,
@@ -33,6 +33,7 @@ import {
   getBookPhotos,
   getEventPhotos,
   getCampaignVideoLinks,
+  isProfileComplete,
 } from "@/lib/utils";
 import { APP_ROUTE } from "@/lib/routes";
 
@@ -88,6 +89,7 @@ export default async function ModerationDetailPage({
             <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">{formatFullName(model)}</h1>
             <div className="mt-1 flex items-center gap-2 text-sm text-zinc-500">
               <StatusBadge status={kyc.status} />
+              {!isProfileComplete(model) && <Badge tone="warning">Perfil incompleto</Badge>}
               <span>·</span>
               <span>Enviado el {formatDate(kyc.createdAt)}</span>
             </div>
@@ -302,6 +304,33 @@ export default async function ModerationDetailPage({
                 </div>
               )}
             </div>
+          </Card>
+
+          <Card>
+            <CardHeader
+              title="Historial de revisiones"
+              subtitle={kyc.reviewLogs.length === 0 ? "Sin revisiones todavía." : undefined}
+            />
+            {kyc.reviewLogs.length > 0 && (
+              <div className="space-y-3 px-5 pb-5">
+                {kyc.reviewLogs.map((log) => (
+                  <div key={log.id} className="rounded-lg border border-zinc-200 p-3 text-xs">
+                    <div className="flex items-center justify-between gap-2">
+                      <StatusBadge status={log.decision} />
+                      <span className="text-zinc-400">{formatDate(log.reviewedAt)}</span>
+                    </div>
+                    <p className="mt-2 text-zinc-500">
+                      {log.reviewedBy ? `Por ${log.reviewedBy}` : "Admin sin identificar"}
+                    </p>
+                    {log.comment ? (
+                      <p className="mt-1.5 text-zinc-700">{log.comment}</p>
+                    ) : (
+                      <p className="mt-1.5 text-zinc-400 italic">Sin comentario</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </Card>
 
           <Card>

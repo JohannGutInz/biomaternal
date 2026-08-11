@@ -2,12 +2,12 @@ import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Card } from "@/components/ui/Card";
-import { StatusBadge } from "@/components/ui/Badge";
+import { Badge, StatusBadge } from "@/components/ui/Badge";
 import { Avatar } from "@/components/ui/Avatar";
 import { StatusTabs } from "@/components/ui/StatusTabs";
 import { listModelsKyc } from "@/lib/data";
 import { APP_ROUTE } from "@/lib/routes";
-import { formatDate, formatFullName } from "@/lib/utils";
+import { formatDate, formatFullName, isProfileComplete } from "@/lib/utils";
 import type { KycStatus } from "@/generated/prisma/enums";
 
 const PARAM_TO_STATUS: Record<string, KycStatus> = {
@@ -75,7 +75,10 @@ export default async function ModerationPage({
                     {formatDate(model.kyc.createdAt)}
                   </p>
                 </div>
-                <StatusBadge status={model.kyc.status} />
+                <div className="flex shrink-0 items-center gap-2">
+                  {!isProfileComplete(model) && <Badge tone="warning">Perfil incompleto</Badge>}
+                  <StatusBadge status={model.kyc.status} />
+                </div>
                 <ChevronRight className="h-4 w-4 shrink-0 text-zinc-300" />
               </Link>
             </li>

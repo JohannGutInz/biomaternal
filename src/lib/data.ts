@@ -5,7 +5,6 @@ import { SESSION_COOKIE, verifySessionToken } from "./session";
 import { prisma } from "@/db";
 import { redirect } from "next/navigation";
 import { APP_ROUTE } from "./routes";
-import { isProfileComplete } from "./utils";
 
 // Data access layer. Models/KYC/categories/packages/convocatorias/EventoFoto
 // read from Postgres via Prisma. The self-registration/moderation feedback
@@ -97,17 +96,23 @@ const kycModelInclude = {
 export type ModelWithKyc = Awaited<ReturnType<typeof listModelsKyc>>[number];
 
 export async function listModelsKyc() {
-  const models = await prisma.model.findMany({
+  // No isProfileComplete filter here on purpose: a submission missing
+  // attributes still has a real Kyc record and needs to stay visible to
+  // staff (flagged as incomplete in the UI) instead of silently disappearing
+  // from the queue.
+  return prisma.model.findMany({
     include: kycModelInclude,
     orderBy: { kyc: { createdAt: "desc" } },
   });
-  return models.filter(isProfileComplete);
 }
 
 export async function getModelKyc(id: string) {
   return prisma.model.findUnique({
     where: { id },
-    include: kycModelInclude,
+    include: {
+      ...kycModelInclude,
+      kyc: { include: { reviewLogs: { orderBy: { reviewedAt: "desc" } } } },
+    },
   });
 }
 

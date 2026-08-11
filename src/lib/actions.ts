@@ -210,7 +210,7 @@ export async function moderateKycAction(
   decision: "APPROVED" | "REJECTED" | "REQUIRES_CHANGES",
   formData: FormData,
 ) {
-  await requireAdmin();
+  const session = await requireAdmin();
 
   const result = moderateKycSchema.safeParse({
     modelId,
@@ -227,16 +227,30 @@ export async function moderateKycAction(
   });
   if (!model) return;
 
-  await prisma.kyc.update({
-    where: { id: model.kycId },
-    data: {
-      status: result.data.decision,
-      comment: result.data.comment,
-      internalNote: result.data.internalNote,
-      reviewedAt: new Date(),
-      ...(result.data.decision === "REJECTED" && { rejectedAt: new Date() }),
-    },
-  });
+  await prisma.$transaction([
+    prisma.kyc.update({
+      where: { id: model.kycId },
+      data: {
+        status: result.data.decision,
+        comment: result.data.comment,
+        internalNote: result.data.internalNote,
+        reviewedAt: new Date(),
+        ...(result.data.decision === "REJECTED" && { rejectedAt: new Date() }),
+      },
+    }),
+    // Kyc only ever holds the latest decision/comment — this is the only
+    // place a past review survives the next one, including whether it had a
+    // comment at all.
+    prisma.kycReviewLog.create({
+      data: {
+        id: crypto.randomUUID(),
+        kycId: model.kycId,
+        decision: result.data.decision,
+        comment: result.data.comment ?? null,
+        reviewedBy: session.username || session.email,
+      },
+    }),
+  ]);
 
   revalidatePath("/app/moderacion");
   revalidatePath(`/app/moderacion/${result.data.modelId}`);
@@ -394,6 +408,23 @@ export async function updateOwnModelProfileAction(data: OwnModelProfileData): Pr
   });
   if (!currentModel) redirect(APP_ROUTE.app.login.index);
 
+  // Editing is locked while a review is pending and after a rejection — the
+  // UI already hides the form in these states, but that's cosmetic only:
+  // this action is reachable directly (see actions.ts security review), so
+  // the real gate has to live here too.
+  if (currentModel.kyc.status === "PENDING") {
+    return {
+      status: "error",
+      message: "Tu perfil está en revisión. No puedes editarlo hasta que la agencia lo apruebe.",
+    };
+  }
+  if (currentModel.kyc.status === "REJECTED") {
+    return {
+      status: "error",
+      message: "Tu perfil fue rechazado y ya no admite ediciones. Contacta a la agencia si crees que es un error.",
+    };
+  }
+
   const currentMainPhoto = getMainPhotoUrl(currentModel.assets);
   const currentPresentationVideo = getGalleryVideos(currentModel.assets)[0] ?? null;
   const currentCasualPhotos = getCasualPhotos(currentModel.media);
@@ -456,6 +487,7 @@ export async function updateOwnModelProfileAction(data: OwnModelProfileData): Pr
 
   revalidatePath(APP_ROUTE.app.model.profile);
   revalidatePath("/app/moderacion");
+  revalidatePath(`/app/moderacion/${currentModel.id}`);
   revalidatePath("/app/dashboard");
 
   return {

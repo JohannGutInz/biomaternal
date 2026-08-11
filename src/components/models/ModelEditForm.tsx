@@ -231,18 +231,30 @@ export function ModelEditForm({
       <Card>
         <CardHeader title="Datos de contacto" />
         <div className="grid grid-cols-1 gap-4 px-5 pb-5 sm:grid-cols-2">
-          <Input label="Nombre(s)" {...register("firstName")} error={errors.firstName?.message} />
+          <Input
+            label="Nombre(s)"
+            defaultValue={model.firstName}
+            {...register("firstName")}
+            error={errors.firstName?.message}
+          />
           <Input
             label="Apellido paterno"
+            defaultValue={model.paternalLastName}
             {...register("paternalLastName")}
             error={errors.paternalLastName?.message}
           />
           <Input
             label="Apellido materno"
+            defaultValue={model.maternalLastName ?? ""}
             {...register("maternalLastName")}
             error={errors.maternalLastName?.message}
           />
-          <Input label="Teléfono" {...register("phone")} error={errors.phone?.message} />
+          <Input
+            label="Teléfono"
+            defaultValue={model.phone}
+            {...register("phone")}
+            error={errors.phone?.message}
+          />
         </div>
       </Card>
 
@@ -252,12 +264,14 @@ export function ModelEditForm({
           <Input
             type="number"
             label="Estatura (cm)"
+            defaultValue={model.height ?? ""}
             {...register("height", { valueAsNumber: true })}
             error={errors.height?.message}
           />
           <Input
             type="number"
             label="Peso actual (kg)"
+            defaultValue={model.currentWeight ?? ""}
             {...register("currentWeight", { valueAsNumber: true })}
             error={errors.currentWeight?.message}
           />
@@ -281,9 +295,18 @@ export function ModelEditForm({
             <option value={PantsSizeScale.MEN}>Hombre</option>
             <option value={PantsSizeScale.WOMEN}>Mujer</option>
           </Select>
-          <Input label="Talla de pantalón" {...register("pantsSize")} error={errors.pantsSize?.message} />
+          <Input
+            label="Talla de pantalón"
+            defaultValue={model.pantsSize ?? ""}
+            {...register("pantsSize")}
+            error={errors.pantsSize?.message}
+          />
           <div className="sm:col-span-2">
-            <Checkbox label="¿Tiene tatuajes visibles?" {...register("hasVisibleTattoos")} />
+            <Checkbox
+              label="¿Tiene tatuajes visibles?"
+              defaultChecked={model.hasVisibleTattoos}
+              {...register("hasVisibleTattoos")}
+            />
           </div>
         </div>
       </Card>
@@ -291,9 +314,13 @@ export function ModelEditForm({
       <Card>
         <CardHeader title="Disponibilidad" />
         <div className="space-y-3 px-5 pb-5">
-          <Checkbox label="Disponibilidad para viajar" {...register("travelAvailability")} />
-          <Checkbox label="¿Cuenta con pasaporte?" {...register("hasPassport")} />
-          <Checkbox label="¿Cuenta con visa?" {...register("hasVisa")} />
+          <Checkbox
+            label="Disponibilidad para viajar"
+            defaultChecked={model.travelAvailability}
+            {...register("travelAvailability")}
+          />
+          <Checkbox label="¿Cuenta con pasaporte?" defaultChecked={model.hasPassport} {...register("hasPassport")} />
+          <Checkbox label="¿Cuenta con visa?" defaultChecked={model.hasVisa} {...register("hasVisa")} />
         </div>
       </Card>
 
@@ -322,6 +349,7 @@ export function ModelEditForm({
         <div className="px-5 pb-5">
           <Checkbox
             label="Ocultar este perfil del catálogo público de modelos"
+            defaultChecked={model.hiddenFromCatalog}
             {...register("hiddenFromCatalog")}
           />
         </div>

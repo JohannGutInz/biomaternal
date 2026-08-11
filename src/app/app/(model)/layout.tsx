@@ -71,7 +71,7 @@ export default async function ModelGroupLayout({
       </header>
 
       {banner && (
-        <div className={cn("border-b px-6 py-3 text-sm", banner.className)}>
+        <div className={cn("border-b px-6 py-3 text-center text-sm", banner.className)}>
           <span className="font-medium">{banner.label}</span>
         </div>
       )}

@@ -336,12 +336,27 @@ export function ModelProfileForm({
       <Card>
         <CardHeader title="Datos de contacto" />
         <div className="grid grid-cols-1 gap-4 px-5 pb-5 sm:grid-cols-2">
-          <Input label="Nombre(s)" {...register("firstName")} error={errors.firstName?.message} />
-          <Input label="Apellido paterno" {...register("paternalLastName")} error={errors.paternalLastName?.message} />
-          <Input label="Apellido materno" {...register("maternalLastName")} error={errors.maternalLastName?.message} />
+          <Input
+            label="Nombre(s)"
+            defaultValue={model.firstName}
+            {...register("firstName")}
+            error={errors.firstName?.message}
+          />
+          <Input
+            label="Apellido paterno"
+            defaultValue={model.paternalLastName}
+            {...register("paternalLastName")}
+            error={errors.paternalLastName?.message}
+          />
+          <Input
+            label="Apellido materno"
+            defaultValue={model.maternalLastName ?? ""}
+            {...register("maternalLastName")}
+            error={errors.maternalLastName?.message}
+          />
           <Input label="Correo" disabled value={model.email} />
           <div className="sm:col-span-2">
-            <Input label="Teléfono" {...register("phone")} error={errors.phone?.message} />
+            <Input label="Teléfono" defaultValue={model.phone} {...register("phone")} error={errors.phone?.message} />
           </div>
         </div>
       </Card>
@@ -353,12 +368,14 @@ export function ModelProfileForm({
           <Input
             type="number"
             label="Estatura (cm)"
+            defaultValue={model.height ?? ""}
             {...register("height", { valueAsNumber: true })}
             error={errors.height?.message}
           />
           <Input
             type="number"
             label="Peso actual (kg)"
+            defaultValue={model.currentWeight ?? ""}
             {...register("currentWeight", { valueAsNumber: true })}
             error={errors.currentWeight?.message}
           />
@@ -384,9 +401,18 @@ export function ModelProfileForm({
             <option value="MEN">Hombre</option>
             <option value="WOMEN">Mujer</option>
           </Select>
-          <Input label="Talla de pantalón" {...register("pantsSize")} error={errors.pantsSize?.message} />
+          <Input
+            label="Talla de pantalón"
+            defaultValue={model.pantsSize ?? ""}
+            {...register("pantsSize")}
+            error={errors.pantsSize?.message}
+          />
           <div className="col-span-2 sm:col-span-3">
-            <Checkbox label="¿Tienes tatuajes visibles?" {...register("hasVisibleTattoos")} />
+            <Checkbox
+              label="¿Tienes tatuajes visibles?"
+              defaultChecked={model.hasVisibleTattoos}
+              {...register("hasVisibleTattoos")}
+            />
           </div>
         </div>
       </Card>
@@ -395,9 +421,13 @@ export function ModelProfileForm({
       <Card>
         <CardHeader title="Disponibilidad" />
         <div className="grid grid-cols-1 gap-3 px-5 pb-5 sm:grid-cols-3">
-          <Checkbox label="Disponible para viajar" {...register("travelAvailability")} />
-          <Checkbox label="Tengo pasaporte" {...register("hasPassport")} />
-          <Checkbox label="Tengo visa" {...register("hasVisa")} />
+          <Checkbox
+            label="Disponible para viajar"
+            defaultChecked={model.travelAvailability}
+            {...register("travelAvailability")}
+          />
+          <Checkbox label="Tengo pasaporte" defaultChecked={model.hasPassport} {...register("hasPassport")} />
+          <Checkbox label="Tengo visa" defaultChecked={model.hasVisa} {...register("hasVisa")} />
         </div>
       </Card>
 

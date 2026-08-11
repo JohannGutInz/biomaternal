@@ -140,9 +140,26 @@ model Kyc {
   createdAt    DateTime  @default(now()) @map("created_at")
   updatedAt    DateTime  @updatedAt @map("updated_at")
 
-  model Model?
+  model      Model?
+  reviewLogs KycReviewLog[]
 
   @@map("kycs")
+}
+
+// One row per moderateKycAction call — Kyc only ever holds the latest
+// decision/comment, so this is the only place a past review (and whether it
+// had a comment at all) survives the next one.
+model KycReviewLog {
+  id         String    @id @default(uuid())
+  kycId      String    @map("kyc_id")
+  kyc        Kyc       @relation(fields: [kycId], references: [id], onDelete: Cascade)
+  decision   KycStatus
+  comment    String?
+  reviewedBy String?   @map("reviewed_by")
+  reviewedAt DateTime  @default(now()) @map("reviewed_at")
+
+  @@index([kycId])
+  @@map("kyc_review_logs")
 }
 
 model Model {
