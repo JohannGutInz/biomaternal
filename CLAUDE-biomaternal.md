@@ -114,11 +114,14 @@ Un cobro se liga a una reserva. En Fase 1 es **registro manual** (no pasarela). 
 
 ### Seguimiento de recepción (`registro-consultas.md`, ver Fase 2.5)
 
-`Reservation` se extendió con `patientName`, `patientPhone`, `cancellationReason`, `inbodyIncluded`
-(la cita con paciente vive en la misma tabla que la reserva del consultorio, no en una entidad
-aparte — ver decisión en Fase 2.5). Cuatro entidades nuevas, independientes de `Reservation`:
-`InbodySale`, `WhatsappRequest`, `CallLog`, `B2bProspect`. `Specialist` ganó `active` (estatus
-operativo) y `defaultConsultorioId` (consultorio habitual). El detalle campo por campo está en
+`Reservation` se extendió con `clientId`, `cancellationReason`, `inbodyIncluded` (la cita con
+paciente vive en la misma tabla que la reserva del consultorio, no en una entidad aparte — ver
+decisión en Fase 2.5). Cuatro entidades nuevas: `InbodySale`, `WhatsappRequest`, `CallLog`
+(las tres con `clientId` obligatorio), `B2bProspect`. `Client` (nombre, teléfono, notas) es la
+entidad compartida — reemplaza el texto libre que tenían `Reservation`/`InbodySale`/
+`WhatsappRequest`/`CallLog` originalmente, y es lo que permite ver el historial completo de una
+misma persona (`/app/clientes/[id]`). `Specialist` ganó `active` (estatus operativo) y
+`defaultConsultorioId` (consultorio habitual). El detalle campo por campo está en
 `registro-consultas.md`, que es la especificación funcional que se siguió al pie de la letra —
 este documento no la duplica.
 
@@ -187,8 +190,8 @@ Especificación funcional formal entregada por el cliente (`registro-consultas.m
 1:1 el Excel operativo real de recepción. Decisiones de integración con lo ya construido en Fase 1
 (confirmadas antes de implementar, ver histórico de la conversación):
 
-16. ✅ `Reservation` se extiende (no una tabla `Cita` aparte) con `patientName`/`patientPhone`
-    (obligatorio en UI solo cuando `type = HOURLY`), `cancellationReason` (exigido al cancelar) e
+16. ✅ `Reservation` se extiende (no una tabla `Cita` aparte) con `clientId` (obligatorio en UI solo
+    cuando `type = HOURLY` — ver ítem 22), `cancellationReason` (exigido al cancelar) e
     `inbodyIncluded`. Se conserva el flujo `PENDING/CONFIRMED` de apartado anticipado; se agrega
     `POSTPONED` junto a los 5 estados existentes.
 17. ✅ El precio (`priceApplied`) dejó de calcularse solo por tarifa de consultorio — se captura a
@@ -206,6 +209,14 @@ Especificación funcional formal entregada por el cliente (`registro-consultas.m
 21. ⏳ Diferido a propósito (mejoras sugeridas en el propio documento, no en el Excel original):
     promoción automática de un `B2bProspect` confirmado a `Specialist`, y enlace automático de un
     `WhatsappRequest` concretado a la `Reservation` que genera. Hoy son manuales.
+22. ✅ **Módulo Clientes** (pedido explícito post-Fase 2.5, no en el documento original): entidad
+    `Client` (nombre, teléfono, notas) que reemplaza el texto libre de paciente/contacto en
+    `Reservation`, `InbodySale`, `WhatsappRequest` y `CallLog` — vincula directamente el historial
+    de una misma persona a través de citas, InBody, WhatsApp y llamadas. `/app/clientes` (listado +
+    alta/edición) y `/app/clientes/[id]` (detalle con las 4 secciones vinculadas). `ClientPicker`
+    (buscar o crear al vuelo) reemplaza los inputs de texto en los 5 formularios que antes
+    capturaban paciente/contacto a mano — el especialista también puede crear clientes desde su
+    propio portal (`requireStaffOrSpecialist`, no solo `requireAdmin`).
 
 ### Fase 3 — Extensiones (fuera de este alcance)
 Expediente clínico y cumplimiento NOM-024, citas médicas más allá de agenda/contacto, facturación CFDI, pagos en línea, roles por sucursal.
