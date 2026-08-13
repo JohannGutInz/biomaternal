@@ -3,6 +3,7 @@
 import { useState, useCallback } from "react";
 import Cropper, { type Area } from "react-easy-crop";
 import { RotateCcw, RotateCw, Check, X } from "lucide-react";
+import { Modal } from "@/components/ui/Modal";
 
 async function getCroppedCanvas(
   imageSrc: string,
@@ -89,12 +90,7 @@ export function ImageCropModal({ src, aspect = 1, onConfirm, onCancel }: ImageCr
   }
 
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-label="Editar imagen"
-      className="fixed inset-0 z-50 flex flex-col bg-zinc-950"
-    >
+    <Modal open onClose={onCancel} size="full" title="Editar imagen">
       {/* Header */}
       <div className="flex h-14 shrink-0 items-center justify-between border-b border-white/10 px-4">
         <button
@@ -175,6 +171,6 @@ export function ImageCropModal({ src, aspect = 1, onConfirm, onCancel }: ImageCr
           <span className="w-8 text-xs text-zinc-500">{zoom.toFixed(1)}×</span>
         </div>
       </div>
-    </div>
+    </Modal>
   );
 }

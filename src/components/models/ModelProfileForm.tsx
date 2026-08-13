@@ -9,6 +9,7 @@ import { Select } from "@/components/ui/Select";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { MultiSelectPicker } from "@/components/ui/MultiSelectPicker";
 import { Button } from "@/components/ui/Button";
+import { Modal } from "@/components/ui/Modal";
 import { ModelMediaFields, type ModelMediaFieldsHandle } from "@/components/models/ModelMediaFields";
 import { ImageCropModal } from "@/components/models/ImageCropModal";
 import { updateOwnModelProfileAction } from "@/lib/actions";
@@ -194,24 +195,26 @@ export function ModelProfileForm({
   return (
     <>
     {/* Approve-then-save confirmation modal */}
-    {confirmApprovedSave && (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/60 px-4 backdrop-blur-sm">
-        <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
-          <p className="font-semibold text-zinc-900">¿Guardar cambios?</p>
-          <p className="mt-2 text-sm text-zinc-500">
-            Tu perfil ya está aprobado. Si guardas estos cambios, deberá aprobarse de nuevo por la agencia.
-          </p>
-          <div className="mt-5 flex justify-end gap-3">
-            <Button type="button" variant="ghost" onClick={() => setConfirmApprovedSave(null)}>
-              Cancelar
-            </Button>
-            <Button type="button" onClick={() => doSave(confirmApprovedSave)}>
-              Sí, guardar
-            </Button>
-          </div>
-        </div>
-      </div>
-    )}
+    <Modal
+      open={!!confirmApprovedSave}
+      onClose={() => setConfirmApprovedSave(null)}
+      size="sm"
+      title="¿Guardar cambios?"
+      footer={
+        <>
+          <Button type="button" variant="ghost" onClick={() => setConfirmApprovedSave(null)}>
+            Cancelar
+          </Button>
+          <Button type="button" onClick={() => confirmApprovedSave && doSave(confirmApprovedSave)}>
+            Sí, guardar
+          </Button>
+        </>
+      }
+    >
+      <p className="text-sm text-zinc-500">
+        Tu perfil ya está aprobado. Si guardas estos cambios, deberá aprobarse de nuevo por la agencia.
+      </p>
+    </Modal>
 
     {/* Avatar crop modal */}
     {avatarCropSrc && (
