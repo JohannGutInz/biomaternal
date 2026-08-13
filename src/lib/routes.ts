@@ -27,11 +27,9 @@ export const APP_ROUTE = {
     },
     sucursales: {
       index: "/app/sucursales",
-      new: "/app/sucursales/nuevo",
     },
     consultorios: {
       index: "/app/consultorios",
-      new: "/app/consultorios/nuevo",
     },
     agenda: {
       index: "/app/agenda"
