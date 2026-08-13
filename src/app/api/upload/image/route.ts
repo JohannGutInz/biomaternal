@@ -33,20 +33,20 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Archivo excede 10 MB" }, { status: 400 });
   }
 
-  let modelId: string | null = null;
+  let specialistId: string | null = null;
   if (session?.role === "SPECIALIST") {
-    const model = await prisma.model.findUnique({ where: { userId: session.sub }, select: { id: true } });
-    if (!model) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
-    modelId = model.id;
+    const specialist = await prisma.specialist.findUnique({ where: { userId: session.sub }, select: { id: true } });
+    if (!specialist) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+    specialistId = specialist.id;
   } else if (session) {
-    const requestedModelId = formData.get("modelId");
-    if (typeof requestedModelId === "string" && requestedModelId) modelId = requestedModelId;
+    const requestedId = formData.get("specialistId") ?? formData.get("consultorioId");
+    if (typeof requestedId === "string" && requestedId) specialistId = requestedId;
   }
-  // Sin sesión: registro público, la foto queda en media/images/ hasta que exista el modelo.
+  // Sin sesión: registro público, la foto queda en media/images/ hasta que exista el especialista.
 
   const buffer = Buffer.from(await file.arrayBuffer());
-  const key = modelId
-    ? `modelos/${modelId}/photos/${randomUUID()}.webp`
+  const key = specialistId
+    ? `especialistas/${specialistId}/photos/${randomUUID()}.webp`
     : `media/images/${randomUUID()}.webp`;
 
   try {

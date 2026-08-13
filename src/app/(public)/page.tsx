@@ -2,15 +2,15 @@ import Link from "next/link";
 import Image from "next/image";
 import { ArrowDown, ArrowRight } from "lucide-react";
 import { BrandBackground } from "@/components/public/BrandBackground";
-import { TalentCard } from "@/components/public/TalentCard";
+import { PublicSpecialistCard } from "@/components/public/PublicSpecialistCard";
 import { WhatsAppRow } from "@/components/public/WhatsAppRow";
 import { getSiteSettings } from "@/lib/data";
-import { listFeaturedModels } from "@/lib/public-data";
+import { listFeaturedSpecialists } from "@/lib/public-data";
 
 export default async function HomePage() {
   const [config, featuredModels] = await Promise.all([
     getSiteSettings(),
-    listFeaturedModels(8),
+    listFeaturedSpecialists(8),
   ]);
 
   const ctas = [

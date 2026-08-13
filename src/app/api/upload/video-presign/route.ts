@@ -30,19 +30,19 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Video excede 500 MB" }, { status: 400 });
   }
 
-  let modelId: string | null = null;
+  let specialistId: string | null = null;
   if (session?.role === "SPECIALIST") {
-    const model = await prisma.model.findUnique({ where: { userId: session.sub }, select: { id: true } });
-    if (!model) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
-    modelId = model.id;
+    const specialist = await prisma.specialist.findUnique({ where: { userId: session.sub }, select: { id: true } });
+    if (!specialist) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+    specialistId = specialist.id;
   } else if (session && typeof body.modelId === "string" && body.modelId) {
-    modelId = body.modelId;
+    specialistId = body.modelId;
   }
-  // Sin sesión: registro público, el video queda en media/videos/ hasta que exista el modelo.
+  // Sin sesión: registro público, el video queda en media/videos/ hasta que exista el especialista.
 
   const ext = filename?.split(".").pop() ?? "mp4";
-  const key = modelId
-    ? `modelos/${modelId}/videos/${randomUUID()}.${ext}`
+  const key = specialistId
+    ? `especialistas/${specialistId}/videos/${randomUUID()}.${ext}`
     : `media/videos/${randomUUID()}.${ext}`;
 
   try {

@@ -114,7 +114,7 @@ export function Sidebar({
               <ul className="space-y-0.5">
                 {group.items.map((item) => {
                   const active = pathname === item.href || pathname?.startsWith(item.href + "/");
-                  const showBadge = item.href === APP_ROUTE.app.moderation.index && pendingCount > 0;
+                  const showBadge = item.href === APP_ROUTE.app.verification.index && pendingCount > 0;
                   return (
                     <li key={item.href}>
                       <Link

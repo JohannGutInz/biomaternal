@@ -6,10 +6,9 @@ import { prisma } from "@/db";
 import { redirect } from "next/navigation";
 import { APP_ROUTE } from "./routes";
 
-// Data access layer. Models/KYC/categories read from Postgres via Prisma. The
-// self-registration/moderation feedback flow still reads in-memory fixtures
-// (mock-data.ts) — pages already call everything with `await`, ready to
-// become real queries later.
+// Data access layer. Specialists/KYC/specialties/sucursales/consultorios/
+// reservations/charges read from Postgres via Prisma. The self-registration/
+// moderation feedback flow still reads in-memory fixtures (mock-data.ts).
 
 export async function getCurrentUser() {
   const cookieStore = await cookies();
@@ -44,73 +43,63 @@ export async function getCurrentUser() {
   return user satisfies UserW;
 }
 
-// ---------- Models ----------
+// ---------- Specialists ----------
 
-const modelInclude = {
-  categories: true,
-  activities: true,
-  country: true,
-  city: { include: { state: true } },
-  assets: true,
-  media: true,
+const specialistInclude = {
+  specialties: true,
 } as const;
 
-export type ModelWithRelations = Awaited<ReturnType<typeof listModels>>[number];
+export type SpecialistWithRelations = Awaited<ReturnType<typeof listSpecialists>>[number];
 
-export async function listModels() {
-  return prisma.model.findMany({
+export async function listSpecialists() {
+  return prisma.specialist.findMany({
     where: { kyc: { status: "APPROVED" } },
-    include: modelInclude,
+    include: specialistInclude,
     orderBy: [{ paternalLastName: "asc" }, { firstName: "asc" }],
   });
 }
 
-export async function getModel(id: string) {
-  return prisma.model.findFirst({
+export async function getSpecialist(id: string) {
+  return prisma.specialist.findFirst({
     where: { id, kyc: { status: "APPROVED" } },
-    include: modelInclude,
+    include: specialistInclude,
   });
 }
 
-export type OwnModelWithKyc = Awaited<ReturnType<typeof getOwnModel>>;
+export type OwnSpecialistWithKyc = Awaited<ReturnType<typeof getOwnSpecialist>>;
 
-export async function getOwnModel(userId: string) {
-  return prisma.model.findUnique({
+export async function getOwnSpecialist(userId: string) {
+  return prisma.specialist.findUnique({
     where: { userId },
-    include: { ...modelInclude, kyc: true },
+    include: { ...specialistInclude, kyc: true },
   });
 }
 
-// ---------- Moderation / KYC ----------
+// ---------- Verificación / KYC ----------
 
-const kycModelInclude = {
+const kycSpecialistInclude = {
   kyc: true,
-  categories: true,
-  activities: true,
-  country: true,
-  city: { include: { state: true } },
-  assets: true,
-  media: true,
+  specialties: true,
 } as const;
 
-export type ModelWithKyc = Awaited<ReturnType<typeof listModelsKyc>>[number];
+export type SpecialistWithKyc = Awaited<ReturnType<typeof listSpecialistsKyc>>[number];
 
-export async function listModelsKyc() {
+export async function listSpecialistsKyc() {
   // No isProfileComplete filter here on purpose: a submission missing
   // attributes still has a real Kyc record and needs to stay visible to
   // staff (flagged as incomplete in the UI) instead of silently disappearing
   // from the queue.
-  return prisma.model.findMany({
-    include: kycModelInclude,
+  return prisma.specialist.findMany({
+    include: kycSpecialistInclude,
     orderBy: { kyc: { createdAt: "desc" } },
   });
 }
 
-export async function getModelKyc(id: string) {
-  return prisma.model.findUnique({
+export async function getSpecialistKyc(id: string) {
+  return prisma.specialist.findUnique({
     where: { id },
     include: {
-      ...kycModelInclude,
+      ...kycSpecialistInclude,
       kyc: { include: { reviewLogs: { orderBy: { reviewedAt: "desc" } } } },
     },
   });
@@ -128,39 +117,110 @@ export async function getSiteSettings() {
   return siteSettings;
 }
 
-// ---------- Catalogs (categories) ----------
+// ---------- Catálogo de especialidades ----------
 
-export async function listCategories() {
-  return prisma.category.findMany({ where: { enabled: true }, orderBy: { name: "asc" } });
+export async function listSpecialties() {
+  return prisma.specialty.findMany({ where: { enabled: true }, orderBy: { name: "asc" } });
 }
 
-// ---------- Catalogs (activities) ----------
+// ---------- Sucursales / Consultorios ----------
 
-export async function listActivities() {
-  return prisma.activity.findMany({ orderBy: { name: "asc" } });
+export type SucursalWithConsultorios = Awaited<ReturnType<typeof listSucursales>>[number];
+
+export async function listSucursales() {
+  return prisma.sucursal.findMany({
+    include: { consultorios: true },
+    orderBy: { name: "asc" },
+  });
+}
+
+export async function getSucursal(id: string) {
+  return prisma.sucursal.findUnique({ where: { id }, include: { consultorios: true } });
+}
+
+export type ConsultorioWithSucursal = Awaited<ReturnType<typeof listConsultorios>>[number];
+
+export async function listConsultorios() {
+  return prisma.consultorio.findMany({
+    include: { sucursal: true, fotos: true },
+    orderBy: { name: "asc" },
+  });
+}
+
+export async function getConsultorio(id: string) {
+  return prisma.consultorio.findUnique({
+    where: { id },
+    include: { sucursal: true, fotos: { orderBy: { position: "asc" } } },
+  });
+}
+
+// ---------- Reservas ----------
+
+const reservationInclude = {
+  consultorio: { include: { sucursal: true } },
+  specialist: true,
+  charge: true,
+} as const;
+
+export type ReservationWithRelations = Awaited<ReturnType<typeof listReservations>>[number];
+
+export async function listReservations() {
+  return prisma.reservation.findMany({
+    include: reservationInclude,
+    orderBy: { startAt: "desc" },
+  });
+}
+
+export async function getReservation(id: string) {
+  return prisma.reservation.findUnique({ where: { id }, include: reservationInclude });
+}
+
+// Occupancy view for the calendar/agenda: reservations in a date window,
+// optionally scoped to one sucursal.
+export async function listReservationsInRange(from: Date, to: Date, sucursalId?: string) {
+  return prisma.reservation.findMany({
+    where: {
+      startAt: { lt: to },
+      endAt: { gt: from },
+      status: { in: ["PENDING", "CONFIRMED"] },
+      ...(sucursalId ? { consultorio: { sucursalId } } : {}),
+    },
+    include: reservationInclude,
+    orderBy: { startAt: "asc" },
+  });
+}
+
+// ---------- Cobros ----------
+
+export type ChargeWithReservation = Awaited<ReturnType<typeof listCharges>>[number];
+
+export async function listCharges() {
+  return prisma.charge.findMany({
+    include: { reservation: { include: { consultorio: true, specialist: true } } },
+    orderBy: { createdAt: "desc" },
+  });
 }
 
 // ---------- Dashboard stats ----------
 
 export async function getDashboardStats() {
-  const [kycModels, mdls] = await Promise.all([listModelsKyc(), listModels()]);
+  const [kycSpecialists, specialists, sucursales, reservations] = await Promise.all([
+    listSpecialistsKyc(),
+    listSpecialists(),
+    listSucursales(),
+    listReservations(),
+  ]);
 
-  const pendingKyc = kycModels.filter((m) => m.kyc.status === "PENDING" || m.kyc.status === "REQUIRES_CHANGES").length;
+  const pendingKyc = kycSpecialists.filter(
+    (s) => s.kyc.status === "PENDING" || s.kyc.status === "REQUIRES_CHANGES",
+  ).length;
+
+  const pendingReservations = reservations.filter((r) => r.status === "PENDING").length;
 
   return {
     pendingApplications: pendingKyc,
-    activeModels: mdls.length,
+    activeSpecialists: specialists.length,
+    sucursalesCount: sucursales.length,
+    pendingReservations,
   };
 }
-
-// ---------- Geography ----------
-
-export async function listGeografia() {
-  const [countries, states, municipalities] = await Promise.all([
-    prisma.country.findMany({ orderBy: { name: "asc" } }),
-    prisma.state.findMany({ orderBy: { name: "asc" } }),
-    prisma.municipality.findMany({ orderBy: { name: "asc" } }),
-  ]);
-  return { countries, states, municipalities };
-}
-

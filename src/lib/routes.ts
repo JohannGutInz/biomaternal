@@ -9,21 +9,38 @@ export const APP_ROUTE = {
     settings: {
       index: "/app/configuracion"
     },
-    moderation: {
-      index: "/app/moderacion"
+    verification: {
+      index: "/app/verificacion"
     },
-    models: {
-      index: "/app/modelos",
-      new: "/app/modelos/nuevo",
+    specialists: {
+      index: "/app/especialistas",
+      new: "/app/especialistas/nuevo",
       edit: {
-        id: (id: string) => `/app/modelos/${id}/editar`
+        id: (id: string) => `/app/especialistas/${id}/editar`
       },
     },
     catalogs: {
       index: "/app/catalogs"
     },
-    model: {
-      profile: "/app/modelo/perfil"
+    specialist: {
+      profile: "/app/especialista/perfil"
+    },
+    sucursales: {
+      index: "/app/sucursales",
+      new: "/app/sucursales/nuevo",
+    },
+    consultorios: {
+      index: "/app/consultorios",
+      new: "/app/consultorios/nuevo",
+    },
+    agenda: {
+      index: "/app/agenda"
+    },
+    reservas: {
+      index: "/app/reservas"
+    },
+    cobros: {
+      index: "/app/cobros"
     },
   },
   registration: {

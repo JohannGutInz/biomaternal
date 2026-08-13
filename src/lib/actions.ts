@@ -10,27 +10,32 @@ import { SESSION_COOKIE, createSessionToken, verifySessionToken } from "./sessio
 import { toDateKey } from "./utils";
 import { emailClientContact } from "./email";
 import { APP_ROUTE } from "./routes";
-import { ownModelProfileSchema, modelEditSchema, registrationActionSchema } from "./schemas";
-import { deleteObject, keyFromObjectUrl } from "./storage";
+import {
+  ownSpecialistProfileSchema,
+  specialistEditSchema,
+  registrationActionSchema,
+  sucursalSchema,
+  consultorioSchema,
+  reservationSchema,
+  chargeSchema,
+} from "./schemas";
+import { deleteObject, keyFromObjectUrl, getSignedDownloadUrl } from "./storage";
 import z from "zod";
 import type {
   LoginData,
   ContactData,
-  CategoryData,
+  SpecialtyData,
   SettingsData,
   ResendApplicationData,
   RegistrationActionData,
-  OwnModelProfileData,
-  ModelEditData,
+  OwnSpecialistProfileData,
+  SpecialistEditData,
+  SucursalData,
+  ConsultorioData,
+  ReservationData,
+  ChargeData,
 } from "./schemas";
-import { UserRole, AssetType, MediaType } from "@/generated/prisma/enums";
-import {
-  getMainPhotoUrl,
-  getGalleryVideos,
-  getCasualPhotos,
-  getBookPhotos,
-  getEventPhotos,
-} from "./utils";
+import { UserRole } from "@/generated/prisma/enums";
 
 export interface ActionState {
   status: "idle" | "success" | "error";
@@ -86,7 +91,7 @@ export async function loginAction(data: LoginData): Promise<ActionState> {
     maxAge: 60 * 60 * 8,
   });
 
-  redirect(user.role === "SPECIALIST" ? APP_ROUTE.app.model.profile : APP_ROUTE.app.models.index);
+  redirect(user.role === "SPECIALIST" ? APP_ROUTE.app.specialist.profile : APP_ROUTE.app.specialists.index);
 }
 
 export async function logoutAction() {
@@ -95,11 +100,12 @@ export async function logoutAction() {
   redirect(APP_ROUTE.app.login.index);
 }
 
-function randomToken(prefix: string) {
-  return `${prefix}_${Math.random().toString(36).slice(2, 10)}`;
-}
-
 // ---------- Public self-registration ----------
+
+async function toPhotoKey(urlOrKey: string | undefined): Promise<string | null> {
+  if (!urlOrKey) return null;
+  return keyFromObjectUrl(urlOrKey) ?? urlOrKey;
+}
 
 export async function submitRegistrationAction(data: RegistrationActionData): Promise<ActionState> {
   const parsed = registrationActionSchema.safeParse(data);
@@ -116,6 +122,7 @@ export async function submitRegistrationAction(data: RegistrationActionData): Pr
   }
 
   const hashedPassword = await hashPassword(d.password);
+  const photoKey = await toPhotoKey(d.photoUrl);
 
   await prisma.$transaction(async (tx) => {
     const user = await tx.user.create({
@@ -127,7 +134,7 @@ export async function submitRegistrationAction(data: RegistrationActionData): Pr
       },
     });
     const kyc = await tx.kyc.create({ data: {} });
-    const model = await tx.model.create({
+    await tx.specialist.create({
       data: {
         firstName: d.firstName,
         paternalLastName: d.paternalLastName,
@@ -136,39 +143,14 @@ export async function submitRegistrationAction(data: RegistrationActionData): Pr
         phone: d.phone,
         birthDate: new Date(d.birthDate),
         genre: d.gender,
-        countryId: d.countryId,
-        nationalityId: d.nationalityId,
-        cityId: d.cityId,
+        licenseNumber: d.licenseNumber || null,
+        bio: d.bio || null,
+        location: d.location || null,
+        photoUrl: photoKey,
         kycId: kyc.id,
         userId: user.id,
-        height: d.height,
-        currentWeight: d.currentWeight,
-        hasVisibleTattoos: d.hasVisibleTattoos,
-        shirtSize: d.shirtSize,
-        pantsSizeScale: d.pantsSizeScale,
-        pantsSize: d.pantsSize,
-        travelAvailability: d.travelAvailability,
-        hasPassport: d.hasPassport,
-        hasVisa: d.hasVisa,
-        categories: { connect: d.categoryIds.map((id) => ({ id })) },
+        specialties: { connect: d.specialtyIds.map((id) => ({ id })) },
       },
-    });
-
-    const mainPhoto = d.mainPhotoUrl ? toAssetKey(d.mainPhotoUrl) : null;
-    const presentationVideo = d.presentationVideoUrl ? toAssetKey(d.presentationVideoUrl) : null;
-    await tx.asset.createMany({
-      data: [
-        ...assetRows(model.id, AssetType.MAIN_PHOTO, mainPhoto ? [mainPhoto] : []),
-        ...assetRows(model.id, AssetType.VIDEO, presentationVideo ? [presentationVideo] : []),
-      ],
-    });
-    await tx.modelMedia.createMany({
-      data: [
-        ...mediaRows(model.id, MediaType.PHOTO_CASUAL, d.casualPhotoUrls.map(toAssetKey)),
-        ...mediaRows(model.id, MediaType.PHOTO_BOOK, d.bookPhotoUrls.map(toAssetKey)),
-        ...mediaRows(model.id, MediaType.PHOTO_EVENT, d.eventPhotoUrls.map(toAssetKey)),
-        ...mediaRows(model.id, MediaType.VIDEO_LINK, d.campaignVideoLinks.map(toAssetKey)),
-      ],
     });
   });
 
@@ -195,24 +177,24 @@ export async function resendApplicationAction(token: string, data: ResendApplica
   return { status: "success", message: "¡Listo! Reenviamos tu información actualizada para una nueva revisión." };
 }
 
-// ---------- KYC (real moderation) ----------
+// ---------- KYC (verificación) ----------
 
 const moderateKycSchema = z.object({
-  modelId: z.string().uuid(),
+  specialistId: z.string().uuid(),
   decision: z.enum(["APPROVED", "REJECTED", "REQUIRES_CHANGES"]),
   comment: z.string().max(2000).optional(),
   internalNote: z.string().max(2000).optional(),
 });
 
 export async function moderateKycAction(
-  modelId: string,
+  specialistId: string,
   decision: "APPROVED" | "REJECTED" | "REQUIRES_CHANGES",
   formData: FormData,
 ) {
   const session = await requireAdmin();
 
   const result = moderateKycSchema.safeParse({
-    modelId,
+    specialistId,
     decision,
     comment: String(formData.get("comment") ?? "").trim() || undefined,
     internalNote: String(formData.get("internalNote") ?? "").trim() || undefined,
@@ -220,15 +202,15 @@ export async function moderateKycAction(
 
   if (!result.success) return;
 
-  const model = await prisma.model.findUnique({
-    where: { id: result.data.modelId },
+  const specialist = await prisma.specialist.findUnique({
+    where: { id: result.data.specialistId },
     select: { kycId: true },
   });
-  if (!model) return;
+  if (!specialist) return;
 
   await prisma.$transaction([
     prisma.kyc.update({
-      where: { id: model.kycId },
+      where: { id: specialist.kycId },
       data: {
         status: result.data.decision,
         comment: result.data.comment,
@@ -243,7 +225,7 @@ export async function moderateKycAction(
     prisma.kycReviewLog.create({
       data: {
         id: crypto.randomUUID(),
-        kycId: model.kycId,
+        kycId: specialist.kycId,
         decision: result.data.decision,
         comment: result.data.comment ?? null,
         reviewedBy: session.username || session.email,
@@ -251,58 +233,33 @@ export async function moderateKycAction(
     }),
   ]);
 
-  revalidatePath("/app/moderacion");
-  revalidatePath(`/app/moderacion/${result.data.modelId}`);
+  revalidatePath(APP_ROUTE.app.verification.index);
+  revalidatePath(`${APP_ROUTE.app.verification.index}/${result.data.specialistId}`);
   revalidatePath("/app/dashboard");
 }
 
-// ---------- Catalogs (categories) ----------
+// ---------- Catálogo de especialidades ----------
 
-export async function createCategoryAction(data: CategoryData): Promise<ActionState> {
+export async function createSpecialtyAction(data: SpecialtyData): Promise<ActionState> {
   await requireAdmin();
 
-  const existing = await prisma.category.findFirst({
+  const existing = await prisma.specialty.findFirst({
     where: { name: { equals: data.name, mode: "insensitive" } },
   });
   if (existing) {
-    return { status: "error", message: "Ya existe un catálogo con ese nombre." };
+    return { status: "error", message: "Ya existe una especialidad con ese nombre." };
   }
 
-  await prisma.category.create({ data: { name: data.name } });
+  await prisma.specialty.create({ data: { name: data.name } });
   revalidatePath("/app/catalogs");
 
-  return { status: "success", message: "Catálogo creado." };
+  return { status: "success", message: "Especialidad creada." };
 }
 
-export async function toggleCategoryEnabledAction(id: string, enabled: boolean): Promise<void> {
+export async function toggleSpecialtyEnabledAction(id: string, enabled: boolean): Promise<void> {
   await requireAdmin();
 
-  await prisma.category.update({ where: { id }, data: { enabled } });
-  revalidatePath("/app/catalogs");
-}
-
-// ---------- Catalogs (activities) ----------
-
-export async function createActivityAction(data: CategoryData): Promise<ActionState> {
-  await requireAdmin();
-
-  const existing = await prisma.activity.findFirst({
-    where: { name: { equals: data.name, mode: "insensitive" } },
-  });
-  if (existing) {
-    return { status: "error", message: "Ya existe una actividad con ese nombre." };
-  }
-
-  await prisma.activity.create({ data: { name: data.name } });
-  revalidatePath("/app/catalogs");
-
-  return { status: "success", message: "Actividad creada." };
-}
-
-export async function toggleActivityEnabledAction(id: string, enabled: boolean): Promise<void> {
-  await requireAdmin();
-
-  await prisma.activity.update({ where: { id }, data: { enabled } });
+  await prisma.specialty.update({ where: { id }, data: { enabled } });
   revalidatePath("/app/catalogs");
 }
 
@@ -352,35 +309,18 @@ export async function submitContactAction(data: ContactData): Promise<ActionStat
   return { status: "success", message: "¡Gracias por tu mensaje! Te responderemos a la brevedad." };
 }
 
-// ---------- Model portal (self-service) ----------
+// ---------- Specialist portal (self-service) ----------
 
-async function deleteRemovedAssets(oldKeys: string[], newKeys: string[]) {
-  const removed = oldKeys.filter((key) => !newKeys.includes(key));
-  await Promise.all(
-    removed.map((key) =>
-      deleteObject(key).catch((err) => {
-        console.error("[deleteRemovedAssets] failed to delete", key, err);
-      }),
-    ),
-  );
+async function deleteRemovedPhoto(oldKey: string | null, newKey: string | null) {
+  if (oldKey && oldKey !== newKey) {
+    await deleteObject(oldKey).catch((err) => {
+      console.error("[deleteRemovedPhoto] failed to delete", oldKey, err);
+    });
+  }
 }
 
-// Assets submitted from the client are signed GET URLs (bucket is private);
-// convert back to bare S3 keys before persisting or diffing.
-function toAssetKey(urlOrKey: string): string {
-  return keyFromObjectUrl(urlOrKey) ?? urlOrKey;
-}
-
-function assetRows(modelId: string, type: AssetType, urls: string[]) {
-  return urls.map((url, position) => ({ modelId, type, url, position }));
-}
-
-function mediaRows(modelId: string, type: MediaType, urls: string[]) {
-  return urls.map((url, position) => ({ modelId, type, url, position }));
-}
-
-export async function updateOwnModelProfileAction(data: OwnModelProfileData): Promise<ActionState> {
-  const result = ownModelProfileSchema.safeParse(data);
+export async function updateOwnSpecialistProfileAction(data: OwnSpecialistProfileData): Promise<ActionState> {
+  const result = ownSpecialistProfileSchema.safeParse(data);
   if (!result.success) {
     return { status: "error", message: "Datos inválidos." };
   }
@@ -393,213 +333,301 @@ export async function updateOwnModelProfileAction(data: OwnModelProfileData): Pr
     redirect(APP_ROUTE.app.login.index);
   }
 
-  const newMainPhoto = result.data.mainPhotoUrl ? toAssetKey(result.data.mainPhotoUrl) : null;
-  const newPresentationVideo = result.data.presentationVideoUrl ? toAssetKey(result.data.presentationVideoUrl) : null;
-  const newCasualPhotos = result.data.casualPhotoUrls.map(toAssetKey);
-  const newBookPhotos = result.data.bookPhotoUrls.map(toAssetKey);
-  const newEventPhotos = result.data.eventPhotoUrls.map(toAssetKey);
-  const newCampaignLinks = result.data.campaignVideoLinks.map(toAssetKey);
-
-  const currentModel = await prisma.model.findUnique({
+  const current = await prisma.specialist.findUnique({
     where: { userId: session.sub },
-    select: { id: true, kycId: true, kyc: { select: { status: true } }, assets: true, media: true },
+    select: { id: true, kycId: true, kyc: { select: { status: true } }, photoUrl: true },
   });
-  if (!currentModel) redirect(APP_ROUTE.app.login.index);
+  if (!current) redirect(APP_ROUTE.app.login.index);
 
   // Editing is locked while a review is pending and after a rejection — the
   // UI already hides the form in these states, but that's cosmetic only:
-  // this action is reachable directly (see actions.ts security review), so
-  // the real gate has to live here too.
-  if (currentModel.kyc.status === "PENDING") {
+  // this action is reachable directly, so the real gate has to live here too.
+  if (current.kyc.status === "PENDING") {
     return {
       status: "error",
-      message: "Tu perfil está en revisión. No puedes editarlo hasta que la agencia lo apruebe.",
+      message: "Tu perfil está en revisión. No puedes editarlo hasta que sea aprobado.",
     };
   }
-  if (currentModel.kyc.status === "REJECTED") {
+  if (current.kyc.status === "REJECTED") {
     return {
       status: "error",
-      message: "Tu perfil fue rechazado y ya no admite ediciones. Contacta a la agencia si crees que es un error.",
+      message: "Tu perfil fue rechazado y ya no admite ediciones. Contacta a la administración si crees que es un error.",
     };
   }
 
-  const currentMainPhoto = getMainPhotoUrl(currentModel.assets);
-  const currentPresentationVideo = getGalleryVideos(currentModel.assets)[0] ?? null;
-  const currentCasualPhotos = getCasualPhotos(currentModel.media);
-  const currentBookPhotos = getBookPhotos(currentModel.media);
-  const currentEventPhotos = getEventPhotos(currentModel.media);
+  const newPhotoKey = await toPhotoKey(result.data.photoUrl);
 
-  await prisma.$transaction([
-    prisma.model.update({
-      where: { userId: session.sub },
-      data: {
-        firstName: result.data.firstName,
-        paternalLastName: result.data.paternalLastName,
-        maternalLastName: result.data.maternalLastName || null,
-        phone: result.data.phone,
-        height: result.data.height,
-        currentWeight: result.data.currentWeight,
-        hasVisibleTattoos: result.data.hasVisibleTattoos,
-        shirtSize: result.data.shirtSize,
-        pantsSizeScale: result.data.pantsSizeScale,
-        pantsSize: result.data.pantsSize,
-        travelAvailability: result.data.travelAvailability,
-        hasPassport: result.data.hasPassport,
-        hasVisa: result.data.hasVisa,
-        categories: { set: result.data.categoryIds.map((id) => ({ id })) },
-      },
-    }),
-    prisma.asset.deleteMany({ where: { modelId: currentModel.id } }),
-    prisma.asset.createMany({
-      data: [
-        ...assetRows(currentModel.id, AssetType.MAIN_PHOTO, newMainPhoto ? [newMainPhoto] : []),
-        ...assetRows(currentModel.id, AssetType.VIDEO, newPresentationVideo ? [newPresentationVideo] : []),
-      ],
-    }),
-    prisma.modelMedia.deleteMany({ where: { modelId: currentModel.id } }),
-    prisma.modelMedia.createMany({
-      data: [
-        ...mediaRows(currentModel.id, MediaType.PHOTO_CASUAL, newCasualPhotos),
-        ...mediaRows(currentModel.id, MediaType.PHOTO_BOOK, newBookPhotos),
-        ...mediaRows(currentModel.id, MediaType.PHOTO_EVENT, newEventPhotos),
-        ...mediaRows(currentModel.id, MediaType.VIDEO_LINK, newCampaignLinks),
-      ],
-    }),
-  ]);
+  await prisma.specialist.update({
+    where: { userId: session.sub },
+    data: {
+      firstName: result.data.firstName,
+      paternalLastName: result.data.paternalLastName,
+      maternalLastName: result.data.maternalLastName || null,
+      phone: result.data.phone,
+      licenseNumber: result.data.licenseNumber || null,
+      bio: result.data.bio || null,
+      location: result.data.location || null,
+      photoUrl: newPhotoKey,
+      specialties: { set: result.data.specialtyIds.map((id) => ({ id })) },
+    },
+  });
 
-  if (currentModel.kyc.status === "APPROVED") {
+  if (current.kyc.status === "APPROVED") {
     await prisma.kyc.update({
-      where: { id: currentModel.kycId },
+      where: { id: current.kycId },
       data: { status: "PENDING" },
     });
   }
 
-  await deleteRemovedAssets(currentMainPhoto ? [currentMainPhoto] : [], newMainPhoto ? [newMainPhoto] : []);
-  await deleteRemovedAssets(
-    currentPresentationVideo ? [currentPresentationVideo] : [],
-    newPresentationVideo ? [newPresentationVideo] : [],
-  );
-  await deleteRemovedAssets(currentCasualPhotos, newCasualPhotos);
-  await deleteRemovedAssets(currentBookPhotos, newBookPhotos);
-  await deleteRemovedAssets(currentEventPhotos, newEventPhotos);
+  await deleteRemovedPhoto(current.photoUrl, newPhotoKey);
 
-  revalidatePath(APP_ROUTE.app.model.profile);
-  revalidatePath("/app/moderacion");
-  revalidatePath(`/app/moderacion/${currentModel.id}`);
+  revalidatePath(APP_ROUTE.app.specialist.profile);
+  revalidatePath(APP_ROUTE.app.verification.index);
+  revalidatePath(`${APP_ROUTE.app.verification.index}/${current.id}`);
   revalidatePath("/app/dashboard");
 
   return {
     status: "success",
     message:
-      currentModel.kyc.status === "APPROVED"
-        ? "Perfil actualizado. Tu KYC vuelve a estar pendiente de aprobación."
+      current.kyc.status === "APPROVED"
+        ? "Perfil actualizado. Tu verificación vuelve a estar pendiente de aprobación."
         : "Perfil actualizado.",
   };
 }
 
-// ---------- Model admin edit ----------
+// ---------- Specialist admin edit ----------
 
-export async function updateModelAttributesAction(modelId: string, data: ModelEditData): Promise<ActionState> {
+export async function updateSpecialistAction(specialistId: string, data: SpecialistEditData): Promise<ActionState> {
   await requireAdmin();
 
-  const result = modelEditSchema.safeParse(data);
+  const result = specialistEditSchema.safeParse(data);
   if (!result.success) {
     return { status: "error", message: "Datos inválidos." };
   }
 
-  const newMainPhoto = result.data.mainPhotoUrl ? toAssetKey(result.data.mainPhotoUrl) : null;
-  const newPresentationVideo = result.data.presentationVideoUrl ? toAssetKey(result.data.presentationVideoUrl) : null;
-  const newCasualPhotos = result.data.casualPhotoUrls.map(toAssetKey);
-  const newBookPhotos = result.data.bookPhotoUrls.map(toAssetKey);
-  const newEventPhotos = result.data.eventPhotoUrls.map(toAssetKey);
-  const newCampaignLinks = result.data.campaignVideoLinks.map(toAssetKey);
-
-  const currentModel = await prisma.model.findUnique({
-    where: { id: modelId },
-    select: { assets: true, media: true },
+  const current = await prisma.specialist.findUnique({
+    where: { id: specialistId },
+    select: { photoUrl: true },
   });
-  if (!currentModel) {
-    return { status: "error", message: "Modelo no encontrado." };
+  if (!current) {
+    return { status: "error", message: "Especialista no encontrado." };
   }
 
-  const currentMainPhoto = getMainPhotoUrl(currentModel.assets);
-  const currentPresentationVideo = getGalleryVideos(currentModel.assets)[0] ?? null;
-  const currentCasualPhotos = getCasualPhotos(currentModel.media);
-  const currentBookPhotos = getBookPhotos(currentModel.media);
-  const currentEventPhotos = getEventPhotos(currentModel.media);
+  const newPhotoKey = await toPhotoKey(result.data.photoUrl);
 
-  await prisma.$transaction([
-    prisma.model.update({
-      where: { id: modelId },
-      data: {
-        firstName: result.data.firstName,
-        paternalLastName: result.data.paternalLastName,
-        maternalLastName: result.data.maternalLastName || null,
-        phone: result.data.phone,
-        height: result.data.height,
-        currentWeight: result.data.currentWeight,
-        hasVisibleTattoos: result.data.hasVisibleTattoos,
-        shirtSize: result.data.shirtSize,
-        pantsSizeScale: result.data.pantsSizeScale,
-        pantsSize: result.data.pantsSize,
-        travelAvailability: result.data.travelAvailability,
-        hasPassport: result.data.hasPassport,
-        hasVisa: result.data.hasVisa,
-        hiddenFromCatalog: result.data.hiddenFromCatalog,
-        categories: { set: result.data.categoryIds.map((id) => ({ id })) },
-      },
-    }),
-    prisma.asset.deleteMany({ where: { modelId } }),
-    prisma.asset.createMany({
-      data: [
-        ...assetRows(modelId, AssetType.MAIN_PHOTO, newMainPhoto ? [newMainPhoto] : []),
-        ...assetRows(modelId, AssetType.VIDEO, newPresentationVideo ? [newPresentationVideo] : []),
-      ],
-    }),
-    prisma.modelMedia.deleteMany({ where: { modelId } }),
-    prisma.modelMedia.createMany({
-      data: [
-        ...mediaRows(modelId, MediaType.PHOTO_CASUAL, newCasualPhotos),
-        ...mediaRows(modelId, MediaType.PHOTO_BOOK, newBookPhotos),
-        ...mediaRows(modelId, MediaType.PHOTO_EVENT, newEventPhotos),
-        ...mediaRows(modelId, MediaType.VIDEO_LINK, newCampaignLinks),
-      ],
-    }),
-  ]);
-
-  await deleteRemovedAssets(currentMainPhoto ? [currentMainPhoto] : [], newMainPhoto ? [newMainPhoto] : []);
-  await deleteRemovedAssets(
-    currentPresentationVideo ? [currentPresentationVideo] : [],
-    newPresentationVideo ? [newPresentationVideo] : [],
-  );
-  await deleteRemovedAssets(currentCasualPhotos, newCasualPhotos);
-  await deleteRemovedAssets(currentBookPhotos, newBookPhotos);
-  await deleteRemovedAssets(currentEventPhotos, newEventPhotos);
-
-  revalidatePath(`${APP_ROUTE.app.models.index}/${modelId}`);
-  revalidatePath(APP_ROUTE.app.models.index);
-
-  return { status: "success", message: "Modelo actualizado." };
-}
-
-export async function toggleModelVisibilityAction(modelId: string, hiddenFromCatalog: boolean): Promise<ActionState> {
-  await requireAdmin();
-
-  await prisma.model.update({
-    where: { id: modelId },
-    data: { hiddenFromCatalog },
+  await prisma.specialist.update({
+    where: { id: specialistId },
+    data: {
+      firstName: result.data.firstName,
+      paternalLastName: result.data.paternalLastName,
+      maternalLastName: result.data.maternalLastName || null,
+      phone: result.data.phone,
+      licenseNumber: result.data.licenseNumber || null,
+      bio: result.data.bio || null,
+      location: result.data.location || null,
+      photoUrl: newPhotoKey,
+      isPublic: result.data.isPublic,
+      specialties: { set: result.data.specialtyIds.map((id) => ({ id })) },
+    },
   });
 
-  revalidatePath(`${APP_ROUTE.app.models.index}/${modelId}`);
-  revalidatePath(APP_ROUTE.app.models.index);
+  await deleteRemovedPhoto(current.photoUrl, newPhotoKey);
 
-  return { status: "success", message: hiddenFromCatalog ? "Perfil ocultado del catálogo." : "Perfil visible en el catálogo." };
+  revalidatePath(`${APP_ROUTE.app.specialists.index}/${specialistId}`);
+  revalidatePath(APP_ROUTE.app.specialists.index);
+
+  return { status: "success", message: "Especialista actualizado." };
 }
 
-export async function crearModeloAdminAction(
+export async function toggleSpecialistVisibilityAction(specialistId: string, isPublic: boolean): Promise<ActionState> {
+  await requireAdmin();
+
+  await prisma.specialist.update({
+    where: { id: specialistId },
+    data: { isPublic },
+  });
+
+  revalidatePath(`${APP_ROUTE.app.specialists.index}/${specialistId}`);
+  revalidatePath(APP_ROUTE.app.specialists.index);
+
+  return { status: "success", message: isPublic ? "Perfil visible en la landing." : "Perfil oculto de la landing." };
+}
+
+export async function crearEspecialistaAdminAction(
   _data: unknown,
-): Promise<ActionState & { modelId?: string }> {
+): Promise<ActionState & { specialistId?: string }> {
   await requireAdmin();
 
   return { status: "error", message: "Not implemented" };
+}
+
+// ---------- Sucursales ----------
+
+export async function crearSucursalAction(data: SucursalData): Promise<ActionState & { sucursalId?: string }> {
+  await requireAdmin();
+
+  const parsed = sucursalSchema.safeParse(data);
+  if (!parsed.success) return { status: "error", message: "Datos inválidos." };
+
+  const sucursal = await prisma.sucursal.create({ data: parsed.data });
+  revalidatePath(APP_ROUTE.app.sucursales.index);
+
+  return { status: "success", message: "Sucursal creada.", sucursalId: sucursal.id };
+}
+
+export async function actualizarSucursalAction(sucursalId: string, data: SucursalData): Promise<ActionState> {
+  await requireAdmin();
+
+  const parsed = sucursalSchema.safeParse(data);
+  if (!parsed.success) return { status: "error", message: "Datos inválidos." };
+
+  await prisma.sucursal.update({ where: { id: sucursalId }, data: parsed.data });
+  revalidatePath(APP_ROUTE.app.sucursales.index);
+  revalidatePath(`${APP_ROUTE.app.sucursales.index}/${sucursalId}`);
+
+  return { status: "success", message: "Sucursal actualizada." };
+}
+
+// ---------- Consultorios ----------
+
+export async function crearConsultorioAction(data: ConsultorioData): Promise<ActionState & { consultorioId?: string }> {
+  await requireAdmin();
+
+  const parsed = consultorioSchema.safeParse(data);
+  if (!parsed.success) return { status: "error", message: "Datos inválidos." };
+
+  const consultorio = await prisma.consultorio.create({ data: parsed.data });
+  revalidatePath(APP_ROUTE.app.consultorios.index);
+
+  return { status: "success", message: "Consultorio creado.", consultorioId: consultorio.id };
+}
+
+export async function actualizarConsultorioAction(consultorioId: string, data: ConsultorioData): Promise<ActionState> {
+  await requireAdmin();
+
+  const parsed = consultorioSchema.safeParse(data);
+  if (!parsed.success) return { status: "error", message: "Datos inválidos." };
+
+  await prisma.consultorio.update({ where: { id: consultorioId }, data: parsed.data });
+  revalidatePath(APP_ROUTE.app.consultorios.index);
+  revalidatePath(`${APP_ROUTE.app.consultorios.index}/${consultorioId}`);
+
+  return { status: "success", message: "Consultorio actualizado." };
+}
+
+export async function toggleConsultorioActiveAction(consultorioId: string, isActive: boolean): Promise<void> {
+  await requireAdmin();
+
+  await prisma.consultorio.update({ where: { id: consultorioId }, data: { isActive } });
+  revalidatePath(APP_ROUTE.app.consultorios.index);
+}
+
+// ---------- Reservas ----------
+// Integridad de no-solape en dos capas: constraint EXCLUDE USING gist a
+// nivel BD (fuente de verdad, ver prisma/migrations) + este chequeo
+// transaccional, que además de servir de defensa en profundidad, convierte
+// el error crudo de Postgres en un mensaje de negocio legible.
+
+class ReservationOverlapError extends Error {}
+
+export async function crearReservationAction(data: ReservationData): Promise<ActionState & { reservationId?: string }> {
+  const session = await requireAdmin();
+
+  const parsed = reservationSchema.safeParse(data);
+  if (!parsed.success) {
+    return { status: "error", message: parsed.error.issues[0]?.message ?? "Datos inválidos." };
+  }
+  const d = parsed.data;
+
+  try {
+    const reservation = await prisma.$transaction(async (tx) => {
+      const overlapping = await tx.reservation.findFirst({
+        where: {
+          consultorioId: d.consultorioId,
+          status: { in: ["PENDING", "CONFIRMED"] },
+          startAt: { lt: new Date(d.endAt) },
+          endAt: { gt: new Date(d.startAt) },
+        },
+        select: { id: true },
+      });
+      if (overlapping) throw new ReservationOverlapError();
+
+      return tx.reservation.create({
+        data: {
+          consultorioId: d.consultorioId,
+          specialistId: d.specialistId,
+          type: d.type,
+          startAt: new Date(d.startAt),
+          endAt: new Date(d.endAt),
+          notes: d.notes || null,
+          createdBy: session.username || session.email,
+        },
+      });
+    });
+
+    revalidatePath(APP_ROUTE.app.reservas.index);
+    revalidatePath(APP_ROUTE.app.agenda.index);
+
+    return { status: "success", message: "Reserva creada.", reservationId: reservation.id };
+  } catch (err) {
+    // The findFirst check above catches the common case; the DB's EXCLUDE
+    // constraint (code 23P01) is the real guarantee under concurrent writes
+    // — two requests can both pass the check and race to insert.
+    const isOverlap =
+      err instanceof ReservationOverlapError ||
+      (err && typeof err === "object" && "code" in err && (err as { code?: string }).code === "23P01");
+    if (isOverlap) {
+      return { status: "error", message: "Ese consultorio ya está reservado en esa franja horaria." };
+    }
+    throw err;
+  }
+}
+
+export async function cambiarStatusReservationAction(
+  reservationId: string,
+  status: "CONFIRMED" | "CANCELLED" | "COMPLETED" | "NO_SHOW",
+): Promise<ActionState> {
+  await requireAdmin();
+
+  await prisma.reservation.update({ where: { id: reservationId }, data: { status } });
+  revalidatePath(APP_ROUTE.app.reservas.index);
+  revalidatePath(APP_ROUTE.app.agenda.index);
+
+  return { status: "success", message: "Reserva actualizada." };
+}
+
+// ---------- Cobros ----------
+
+export async function crearChargeAction(data: ChargeData): Promise<ActionState> {
+  await requireAdmin();
+
+  const parsed = chargeSchema.safeParse(data);
+  if (!parsed.success) return { status: "error", message: "Datos inválidos." };
+
+  await prisma.charge.create({
+    data: {
+      reservationId: parsed.data.reservationId,
+      amount: parsed.data.amount,
+      method: parsed.data.method,
+      status: "PENDING",
+    },
+  });
+  revalidatePath(APP_ROUTE.app.cobros.index);
+
+  return { status: "success", message: "Cobro registrado." };
+}
+
+export async function actualizarChargeStatusAction(
+  chargeId: string,
+  status: "PENDING" | "PAID" | "WAIVED",
+): Promise<ActionState> {
+  await requireAdmin();
+
+  await prisma.charge.update({
+    where: { id: chargeId },
+    data: { status, paidAt: status === "PAID" ? new Date() : null },
+  });
+  revalidatePath(APP_ROUTE.app.cobros.index);
+
+  return { status: "success", message: "Cobro actualizado." };
 }

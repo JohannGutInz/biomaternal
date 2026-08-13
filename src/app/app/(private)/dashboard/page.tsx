@@ -1,4 +1,4 @@
-import { ShieldCheck, UserPlus, UserRoundPlus, UsersRound } from "lucide-react";
+import { Building2, ClipboardCheck, ShieldCheck, UserPlus, UserRoundPlus, UsersRound } from "lucide-react";
 import { StatCard } from "@/components/ui/StatCard";
 import { AlertList } from "@/components/dashboard/AlertList";
 import { QuickActions } from "@/components/dashboard/QuickActions";
@@ -20,20 +20,34 @@ export default async function DashboardPage() {
         <p className="mt-1 text-sm text-zinc-500">{formatLongDate(now)}</p>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
-          title="Modelos activos"
-          value={String(stats.activeModels)}
-          subtitle="Con KYC aprobado"
+          title="Especialistas activos"
+          value={String(stats.activeSpecialists)}
+          subtitle="Con verificación aprobada"
           icon={UsersRound}
           tone="zinc"
         />
         <StatCard
           title="Solicitudes pendientes"
           value={String(stats.pendingApplications)}
-          subtitle="Esperando moderación"
+          subtitle="Esperando verificación"
           icon={UserPlus}
           tone="rose"
+        />
+        <StatCard
+          title="Sucursales"
+          value={String(stats.sucursalesCount)}
+          subtitle="Registradas"
+          icon={Building2}
+          tone="zinc"
+        />
+        <StatCard
+          title="Reservas pendientes"
+          value={String(stats.pendingReservations)}
+          subtitle="Por confirmar"
+          icon={ClipboardCheck}
+          tone="gold"
         />
       </div>
 
@@ -44,16 +58,16 @@ export default async function DashboardPage() {
               icon: UserPlus,
               tone: "rose",
               title: `${stats.pendingApplications} solicitudes pendientes`,
-              subtitle: "Esperando moderación",
-              href: APP_ROUTE.app.moderation.index,
+              subtitle: "Esperando verificación",
+              href: APP_ROUTE.app.verification.index,
             },
           ]}
         />
 
         <QuickActions
           items={[
-            { icon: UserRoundPlus, label: "Nuevo modelo", href: APP_ROUTE.app.models.new },
-            { icon: ShieldCheck, label: "Revisar solicitudes", href: APP_ROUTE.app.moderation.index },
+            { icon: UserRoundPlus, label: "Nuevo especialista", href: APP_ROUTE.app.specialists.new },
+            { icon: ShieldCheck, label: "Revisar solicitudes", href: APP_ROUTE.app.verification.index },
           ]}
         />
       </div>

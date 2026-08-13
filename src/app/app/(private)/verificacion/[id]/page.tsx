@@ -13,28 +13,16 @@ import {
   ShieldCheck,
   XCircle,
 } from "lucide-react";
-import { getModelKyc } from "@/lib/data";
-import { signAssetUrls } from "@/lib/storage";
+import { getSpecialistKyc } from "@/lib/data";
+import { signPhotoUrl } from "@/lib/storage";
 import { moderateKycAction } from "@/lib/actions";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { Card, CardHeader } from "@/components/ui/Card";
 import { Field, FieldGrid } from "@/components/ui/Field";
 import { Textarea } from "@/components/ui/Textarea";
-import { Badge, StatusBadge } from "@/components/ui/Badge";
-import {
-  addDays,
-  calculateAge,
-  formatDate,
-  formatFullName,
-  getMainPhotoUrl,
-  getGalleryVideos,
-  getCasualPhotos,
-  getBookPhotos,
-  getEventPhotos,
-  getCampaignVideoLinks,
-  isProfileComplete,
-} from "@/lib/utils";
+import { StatusBadge } from "@/components/ui/Badge";
+import { addDays, calculateAge, formatDate, formatFullName } from "@/lib/utils";
 import { APP_ROUTE } from "@/lib/routes";
 
 const GENRE_LABEL: Record<string, string> = {
@@ -42,54 +30,44 @@ const GENRE_LABEL: Record<string, string> = {
   FEMALE: "Femenino",
 };
 
-export default async function ModerationDetailPage({
+export default async function VerificationDetailPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const model = await getModelKyc(id);
+  const specialist = await getSpecialistKyc(id);
 
-  if (!model) notFound();
+  if (!specialist) notFound();
 
-  model.assets = await signAssetUrls(model.assets);
-  model.media = await signAssetUrls(model.media);
-
-  const { kyc } = model;
-  const age = calculateAge(model.birthDate);
+  const photoUrl = await signPhotoUrl(specialist.photoUrl);
+  const { kyc } = specialist;
+  const age = calculateAge(specialist.birthDate);
   const purgeDate = kyc.rejectedAt ? addDays(kyc.rejectedAt, 45) : null;
   const canReview = kyc.status !== "APPROVED" && kyc.status !== "REJECTED";
-
-  const mainPhotoUrl = getMainPhotoUrl(model.assets);
-  const presentationVideoUrl = getGalleryVideos(model.assets)[0] ?? null;
-  const casualPhotos = getCasualPhotos(model.media);
-  const bookPhotos = getBookPhotos(model.media);
-  const eventPhotos = getEventPhotos(model.media);
-  const campaignVideoLinks = getCampaignVideoLinks(model.media);
 
   return (
     <div>
       <Link
-        href={APP_ROUTE.app.moderation.index}
+        href={APP_ROUTE.app.verification.index}
         className="mb-5 inline-flex items-center gap-1.5 text-sm text-zinc-500 hover:text-zinc-800"
       >
-        <ArrowLeft className="h-4 w-4" /> Volver a Moderación
+        <ArrowLeft className="h-4 w-4" /> Volver a Verificación
       </Link>
 
       <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div className="flex items-center gap-4">
-          {mainPhotoUrl ? (
+          {photoUrl ? (
             <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-full">
-              <Image src={mainPhotoUrl} alt={formatFullName(model)} fill className="object-cover" unoptimized />
+              <Image src={photoUrl} alt={formatFullName(specialist)} fill className="object-cover" unoptimized />
             </div>
           ) : (
-            <Avatar name={formatFullName(model)} size="lg" />
+            <Avatar name={formatFullName(specialist)} size="lg" />
           )}
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">{formatFullName(model)}</h1>
+            <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">{formatFullName(specialist)}</h1>
             <div className="mt-1 flex items-center gap-2 text-sm text-zinc-500">
               <StatusBadge status={kyc.status} />
-              {!isProfileComplete(model) && <Badge tone="warning">Perfil incompleto</Badge>}
               <span>·</span>
               <span>Enviado el {formatDate(kyc.createdAt)}</span>
             </div>
@@ -111,36 +89,39 @@ export default async function ModerationDetailPage({
               <FieldGrid>
                 <Field
                   label={<span className="inline-flex items-center gap-1"><Mail className="h-3 w-3" /> Correo</span>}
-                  value={model.email}
+                  value={specialist.email}
                 />
                 <Field
                   label={<span className="inline-flex items-center gap-1"><Phone className="h-3 w-3" /> Teléfono</span>}
-                  value={model.phone}
+                  value={specialist.phone}
                 />
                 <Field
                   label="Fecha de nacimiento"
-                  value={`${formatDate(model.birthDate)} · ${age} años`}
+                  value={`${formatDate(specialist.birthDate)} · ${age} años`}
                 />
-                <Field label="Género" value={GENRE_LABEL[model.genre] ?? model.genre} />
-                <Field
-                  label={<span className="inline-flex items-center gap-1"><MapPin className="h-3 w-3" /> Ubicación</span>}
-                  value={`${model.city.name}, ${model.city.state.name}, ${model.country.name}`}
-                />
+                <Field label="Género" value={GENRE_LABEL[specialist.genre] ?? specialist.genre} />
+                <Field label="Cédula profesional" value={specialist.licenseNumber ?? "Sin definir"} />
+                {specialist.location && (
+                  <Field
+                    label={<span className="inline-flex items-center gap-1"><MapPin className="h-3 w-3" /> Ubicación</span>}
+                    value={specialist.location}
+                  />
+                )}
               </FieldGrid>
             </div>
           </Card>
 
-          {model.categories.length > 0 && (
+          {specialist.specialties.length > 0 && (
             <Card>
-              <CardHeader title="Categorías" />
+              <CardHeader title="Especialidades" />
               <div className="px-5 pb-5">
                 <div className="flex flex-wrap gap-2">
-                  {model.categories.map((cat) => (
+                  {specialist.specialties.map((sp) => (
                     <span
-                      key={cat.id}
+                      key={sp.id}
                       className="rounded-full bg-zinc-100 px-3 py-1 text-sm font-medium text-zinc-700"
                     >
-                      {cat.name}
+                      {sp.name}
                     </span>
                   ))}
                 </div>
@@ -148,82 +129,17 @@ export default async function ModerationDetailPage({
             </Card>
           )}
 
-          {casualPhotos.length > 0 && (
+          {specialist.bio && (
             <Card>
-              <CardHeader title="Fotos caseras" />
-              <div className="grid grid-cols-3 gap-3 px-5 pb-5 sm:grid-cols-4">
-                {casualPhotos.map((url) => (
-                  <div key={url} className="relative aspect-square overflow-hidden rounded-lg border border-zinc-200">
-                    <Image src={url} alt="Foto casera" fill className="object-cover" unoptimized />
-                  </div>
-                ))}
-              </div>
-            </Card>
-          )}
-
-          {bookPhotos.length > 0 && (
-            <Card>
-              <CardHeader title="Fotos de book" />
-              <div className="grid grid-cols-3 gap-3 px-5 pb-5 sm:grid-cols-4">
-                {bookPhotos.map((url) => (
-                  <div key={url} className="relative aspect-square overflow-hidden rounded-lg border border-zinc-200">
-                    <Image src={url} alt="Foto de book" fill className="object-cover" unoptimized />
-                  </div>
-                ))}
-              </div>
-            </Card>
-          )}
-
-          {eventPhotos.length > 0 && (
-            <Card>
-              <CardHeader title="Fotos de eventos" />
-              <div className="grid grid-cols-3 gap-3 px-5 pb-5 sm:grid-cols-4">
-                {eventPhotos.map((url) => (
-                  <div key={url} className="relative aspect-square overflow-hidden rounded-lg border border-zinc-200">
-                    <Image src={url} alt="Foto de evento" fill className="object-cover" unoptimized />
-                  </div>
-                ))}
-              </div>
-            </Card>
-          )}
-
-          {(presentationVideoUrl || campaignVideoLinks.length > 0) && (
-            <Card>
-              <CardHeader title="Video" />
-              <div className="space-y-4 px-5 pb-5">
-                {presentationVideoUrl && (
-                  <div>
-                    <p className="mb-2 text-xs font-medium text-zinc-400">Video de presentación</p>
-                    <video src={presentationVideoUrl} controls className="w-full rounded-lg" />
-                  </div>
-                )}
-                {campaignVideoLinks.length > 0 && (
-                  <div>
-                    <p className="mb-2 text-xs font-medium text-zinc-400">Links a videos de campañas</p>
-                    <ul className="space-y-1.5">
-                      {campaignVideoLinks.map((url) => (
-                        <li key={url}>
-                          <a
-                            href={url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="truncate text-sm text-brand-700 underline hover:text-brand-600"
-                          >
-                            {url}
-                          </a>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
+              <CardHeader title="Biografía" />
+              <div className="px-5 pb-5 text-sm whitespace-pre-wrap text-zinc-700">{specialist.bio}</div>
             </Card>
           )}
 
           <Card>
             <CardHeader
-              title="Revisión KYC"
-              subtitle="El comentario es visible para el registro. La nota interna es solo para staff."
+              title="Revisión de verificación"
+              subtitle="El comentario es visible para el especialista. La nota interna es solo para staff."
             />
             <form className="space-y-4 px-5 pb-5">
               <Textarea
@@ -231,15 +147,15 @@ export default async function ModerationDetailPage({
                 labelClassName="text-xs font-semibold tracking-wide text-zinc-500 uppercase"
                 name="internalNote"
                 defaultValue={kyc.internalNote ?? ""}
-                placeholder="Observaciones internas, nunca visibles para el registro…"
+                placeholder="Observaciones internas, nunca visibles para el especialista…"
                 className="border-zinc-200 bg-zinc-50 text-zinc-700 focus:border-zinc-400 focus:ring-zinc-400"
               />
               <Textarea
-                label="Comentario para el modelo · visible en su notificación"
+                label="Comentario para el especialista · visible en su notificación"
                 labelClassName="text-xs font-semibold tracking-wide text-brand-700 uppercase"
                 name="comment"
                 defaultValue={kyc.comment ?? ""}
-                placeholder="Lo que el modelo recibirá como retroalimentación…"
+                placeholder="Lo que el especialista recibirá como retroalimentación…"
                 className="border-brand-200 bg-brand-50 text-brand-900 focus:border-brand-400 focus:ring-brand-400"
               />
 
@@ -248,7 +164,7 @@ export default async function ModerationDetailPage({
                   <Button
                     type="submit"
                     variant="secondary"
-                    formAction={moderateKycAction.bind(null, model.id, "REJECTED")}
+                    formAction={moderateKycAction.bind(null, specialist.id, "REJECTED")}
                     className="hover:bg-rose-50 hover:text-rose-700 hover:ring-rose-200"
                   >
                     <XCircle className="h-4 w-4" /> Rechazar
@@ -256,12 +172,12 @@ export default async function ModerationDetailPage({
                   <Button
                     type="submit"
                     variant="secondary"
-                    formAction={moderateKycAction.bind(null, model.id, "REQUIRES_CHANGES")}
+                    formAction={moderateKycAction.bind(null, specialist.id, "REQUIRES_CHANGES")}
                     className="hover:bg-amber-50 hover:text-amber-700 hover:ring-amber-200"
                   >
                     <RotateCcw className="h-4 w-4" /> Solicitar cambios
                   </Button>
-                  <Button type="submit" formAction={moderateKycAction.bind(null, model.id, "APPROVED")}>
+                  <Button type="submit" formAction={moderateKycAction.bind(null, specialist.id, "APPROVED")}>
                     <CheckCircle2 className="h-4 w-4" /> Aprobar
                   </Button>
                 </div>
@@ -294,7 +210,7 @@ export default async function ModerationDetailPage({
               )}
               {kyc.status === "APPROVED" && (
                 <div className="rounded-lg bg-emerald-50 p-3 text-xs text-emerald-700">
-                  Modelo aprobado — forma parte del roster.
+                  Especialista aprobado — forma parte del directorio.
                 </div>
               )}
               {kyc.status === "REQUIRES_CHANGES" && kyc.comment && (
@@ -337,8 +253,8 @@ export default async function ModerationDetailPage({
             <CardHeader title="Identificación" />
             <div className="px-5 pb-5">
               <FieldGrid>
-                <Field label="ID modelo" value={<span className="font-mono text-xs">{model.id}</span>} />
-                <Field label="ID KYC" value={<span className="font-mono text-xs">{kyc.id}</span>} />
+                <Field label="ID especialista" value={<span className="font-mono text-xs">{specialist.id}</span>} />
+                <Field label="ID verificación" value={<span className="font-mono text-xs">{kyc.id}</span>} />
               </FieldGrid>
             </div>
           </Card>

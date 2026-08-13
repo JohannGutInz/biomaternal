@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { ActionState } from "@/lib/actions";
-import { categorySchema, type CategoryData } from "@/lib/schemas";
+import { specialtySchema, type SpecialtyData } from "@/lib/schemas";
 import { Card, CardHeader } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
@@ -12,11 +12,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 interface CatalogFormProps {
   title: string;
   subtitle: string;
-  action: (data: CategoryData) => Promise<ActionState>;
+  action: (data: SpecialtyData) => Promise<ActionState>;
   placeholder?: string;
 }
 
-export function CatalogForm({ title, subtitle, action, placeholder = "Ej. Fitness, Editorial, Comercial…" }: CatalogFormProps) {
+export function CatalogForm({ title, subtitle, action, placeholder = "Ej. Nutrición, Pediatría, Psicología…" }: CatalogFormProps) {
   const [serverMessage, setServerMessage] = useState<{ type: "error" | "success"; text: string } | null>(null);
 
   const {
@@ -24,9 +24,9 @@ export function CatalogForm({ title, subtitle, action, placeholder = "Ej. Fitnes
     handleSubmit,
     reset,
     formState: { errors, isSubmitting },
-  } = useForm<CategoryData>({ resolver: zodResolver(categorySchema) });
+  } = useForm<SpecialtyData>({ resolver: zodResolver(specialtySchema) });
 
-  async function onSubmit(data: CategoryData) {
+  async function onSubmit(data: SpecialtyData) {
     setServerMessage(null);
     const result = await action(data);
     if (result.status === "success") {

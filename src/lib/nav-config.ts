@@ -1,4 +1,14 @@
-import { List, ShieldCheck, UsersRound, type LucideIcon } from "lucide-react";
+import {
+  Building2,
+  CalendarDays,
+  CircleDollarSign,
+  ClipboardCheck,
+  DoorOpen,
+  List,
+  ShieldCheck,
+  UsersRound,
+  type LucideIcon,
+} from "lucide-react";
 import { APP_ROUTE } from "@/lib/routes";
 
 export interface NavItem {
@@ -14,10 +24,20 @@ export interface NavGroup {
 
 export const NAV_GROUPS: NavGroup[] = [
   {
-    label: "Talento",
+    label: "Especialistas",
     items: [
-      { label: "Modelos", href: APP_ROUTE.app.models.index, icon: UsersRound },
-      { label: "Moderación", href: APP_ROUTE.app.moderation.index, icon: ShieldCheck },
+      { label: "Especialistas", href: APP_ROUTE.app.specialists.index, icon: UsersRound },
+      { label: "Verificación", href: APP_ROUTE.app.verification.index, icon: ShieldCheck },
+    ],
+  },
+  {
+    label: "Clínicas",
+    items: [
+      { label: "Sucursales", href: APP_ROUTE.app.sucursales.index, icon: Building2 },
+      { label: "Consultorios", href: APP_ROUTE.app.consultorios.index, icon: DoorOpen },
+      { label: "Agenda", href: APP_ROUTE.app.agenda.index, icon: CalendarDays },
+      { label: "Reservas", href: APP_ROUTE.app.reservas.index, icon: ClipboardCheck },
+      { label: "Cobros", href: APP_ROUTE.app.cobros.index, icon: CircleDollarSign },
     ],
   },
   {

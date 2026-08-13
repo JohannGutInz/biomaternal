@@ -1,4 +1,4 @@
-import { getCurrentUser, getOwnModel } from "@/lib/data";
+import { getCurrentUser, getOwnSpecialist } from "@/lib/data";
 import { APP_ROUTE } from "@/lib/routes";
 import { logoutAction } from "@/lib/actions";
 import { Button } from "@/components/ui/Button";
@@ -34,9 +34,9 @@ export default async function ModelGroupLayout({
     redirect(APP_ROUTE.app.login.index);
   }
 
-  const model = await getOwnModel(user.id);
+  const specialist = await getOwnSpecialist(user.id);
 
-  const kycStatus = model?.kyc.status;
+  const kycStatus = specialist?.kyc.status;
   const banner = kycStatus ? KYC_STATUS_BANNER[kycStatus] : undefined;
 
   return (

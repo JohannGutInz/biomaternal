@@ -1,20 +1,13 @@
 import { RegistrationForm } from "@/components/public/RegistrationForm";
 import { BrandBackground } from "@/components/public/BrandBackground";
 import { getSiteSettings } from "@/lib/data";
+import { listPublicSpecialties } from "@/lib/public-data";
 import { toDateKey } from "@/lib/utils";
-import { prisma } from "@/db";
 
 export default async function RegistrationPage() {
-  const [config, countries, states, municipalities, categories] = await Promise.all([
+  const [config, specialties] = await Promise.all([
     getSiteSettings(),
-    prisma.country.findMany({ select: { id: true, name: true, demonym: true }, orderBy: { name: "asc" } }),
-    prisma.state.findMany({ select: { id: true, name: true, countryId: true }, orderBy: { name: "asc" } }),
-    prisma.municipality.findMany({ select: { id: true, name: true, stateId: true }, orderBy: { name: "asc" } }),
-    prisma.category.findMany({
-      where: { enabled: true },
-      select: { id: true, name: true },
-      orderBy: { name: "asc" },
-    }),
+    listPublicSpecialties(),
   ]);
 
   return (
@@ -34,13 +27,7 @@ export default async function RegistrationPage() {
         <div className="relative overflow-hidden rounded-[20px] border border-white/14 bg-black/82 p-6 backdrop-blur-xl sm:p-8">
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/[0.07] via-transparent to-transparent" />
           <div className="relative">
-            <RegistrationForm
-              maxDate={toDateKey(new Date())}
-              countries={countries}
-              states={states}
-              municipalities={municipalities}
-              categories={categories}
-            />
+            <RegistrationForm maxDate={toDateKey(new Date())} specialties={specialties} />
           </div>
         </div>
       </div>

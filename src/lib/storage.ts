@@ -132,6 +132,15 @@ export async function getSignedDownloadUrl(key: string, expiresIn = 3600): Promi
   );
 }
 
+// Specialist.photoUrl / Consultorio photo urls are stored as bare S3 keys
+// (private bucket) — resolve to a signed GET url for display. External
+// links (e.g. an http(s) URL entered by mistake) pass through unchanged.
+export async function signPhotoUrl(key: string | null | undefined): Promise<string | null> {
+  if (!key) return null;
+  if (key.startsWith("http://") || key.startsWith("https://")) return key;
+  return getSignedDownloadUrl(key);
+}
+
 export async function signAssetUrls<T extends { url: string }>(assets: T[]): Promise<T[]> {
   return Promise.all(
     assets.map(async (asset) => {

@@ -1,158 +1,106 @@
 import { prisma } from "@/db";
-import {
-  calculateAge,
-  getMainPhotoUrl,
-  getGalleryVideos,
-  getBookPhotos,
-  getCasualPhotos,
-  getEventPhotos,
-  getCampaignVideoLinks,
-} from "./utils";
-import { signAssetUrls } from "./storage";
+import { calculateAge } from "./utils";
+import { signPhotoUrl } from "./storage";
 
-// Public boundary. Only returns models with approved KYC. No private data.
+// Public boundary. Only returns specialists with approved KYC and isPublic.
+// Never exposes internalNotes, phone, or anything KYC-internal.
 
-const publicModelInclude = {
+const publicSpecialistInclude = {
   kyc: true,
-  categories: { select: { name: true } },
-  activities: { select: { name: true } },
-  country: { select: { name: true } },
-  nationality: { select: { demonym: true } },
-  city: { select: { name: true } },
-  assets: true,
-  media: true,
+  specialties: { select: { name: true } },
 } as const;
 
-type RawPublicModel = NonNullable<Awaited<ReturnType<typeof prisma.model.findFirst<{ include: typeof publicModelInclude }>>>>;
+type RawPublicSpecialist = NonNullable<
+  Awaited<ReturnType<typeof prisma.specialist.findFirst<{ include: typeof publicSpecialistInclude }>>>
+>;
 
-export interface PublicModel {
+export interface PublicSpecialist {
   id: string;
   firstName: string;
   paternalLastName: string;
   maternalLastName: string | null;
-  mainPhotoUrl: string | null;
-  photoUrls: string[];
-  casualPhotoUrls: string[];
-  eventPhotoUrls: string[];
-  videoUrls: string[];
-  categories: string[];
-  activities: string[];
+  photoUrl: string | null;
+  specialties: string[];
   genre: string;
-  location: string;
-  countryName: string;
-  cityName: string;
-  nationality: string;
+  location: string | null;
+  bio: string | null;
+  licenseNumber: string | null;
   age: number;
-  height: number | null;
-  currentWeight: number | null;
-  hasVisibleTattoos: boolean;
-  shirtSize: string | null;
-  pantsSizeScale: string | null;
-  pantsSize: string | null;
-  travelAvailability: boolean;
-  hasPassport: boolean;
-  hasVisa: boolean;
-  kycStatus: string;
-  featured: boolean;
-  campaignVideoLinks: string[];
   createdAt: Date;
 }
 
-async function toPublicModel(m: RawPublicModel): Promise<PublicModel> {
-  const [assets, media] = await Promise.all([signAssetUrls(m.assets), signAssetUrls(m.media)]);
+async function toPublicSpecialist(s: RawPublicSpecialist): Promise<PublicSpecialist> {
   return {
-    id: m.id,
-    firstName: m.firstName,
-    paternalLastName: m.paternalLastName,
-    maternalLastName: m.maternalLastName,
-    mainPhotoUrl: getMainPhotoUrl(assets),
-    photoUrls: getBookPhotos(media),
-    casualPhotoUrls: getCasualPhotos(media),
-    eventPhotoUrls: getEventPhotos(media),
-    videoUrls: getGalleryVideos(assets),
-    categories: m.categories.map((c) => c.name),
-    activities: m.activities.map((a) => a.name),
-    genre: m.genre,
-    location: `${m.city.name}, ${m.country.name}`,
-    countryName: m.country.name,
-    cityName: m.city.name,
-    nationality: m.nationality.demonym,
-    age: calculateAge(m.birthDate),
-    height: m.height,
-    currentWeight: m.currentWeight,
-    hasVisibleTattoos: m.hasVisibleTattoos,
-    shirtSize: m.shirtSize,
-    pantsSizeScale: m.pantsSizeScale,
-    pantsSize: m.pantsSize,
-    travelAvailability: m.travelAvailability,
-    hasPassport: m.hasPassport,
-    hasVisa: m.hasVisa,
-    kycStatus: m.kyc.status,
-    featured: false,
-    campaignVideoLinks: getCampaignVideoLinks(media),
-    createdAt: m.createdAt,
+    id: s.id,
+    firstName: s.firstName,
+    paternalLastName: s.paternalLastName,
+    maternalLastName: s.maternalLastName,
+    photoUrl: await signPhotoUrl(s.photoUrl),
+    specialties: s.specialties.map((sp) => sp.name),
+    genre: s.genre,
+    location: s.location,
+    bio: s.bio,
+    licenseNumber: s.licenseNumber,
+    age: calculateAge(s.birthDate),
+    createdAt: s.createdAt,
   };
 }
 
-export async function listPublicModels(): Promise<PublicModel[]> {
-  const models = await prisma.model.findMany({
-    where: { kyc: { status: "APPROVED" }, hiddenFromCatalog: false },
-    include: publicModelInclude,
+export async function listPublicSpecialists(): Promise<PublicSpecialist[]> {
+  const specialists = await prisma.specialist.findMany({
+    where: { kyc: { status: "APPROVED" }, isPublic: true },
+    include: publicSpecialistInclude,
     orderBy: [{ paternalLastName: "asc" }, { firstName: "asc" }],
   });
-  return Promise.all(models.map(toPublicModel));
+  return Promise.all(specialists.map(toPublicSpecialist));
 }
 
-export async function getPublicModel(id: string): Promise<PublicModel | undefined> {
-  const model = await prisma.model.findFirst({
-    where: { id, kyc: { status: "APPROVED" }, hiddenFromCatalog: false },
-    include: publicModelInclude,
+export async function getPublicSpecialist(id: string): Promise<PublicSpecialist | undefined> {
+  const specialist = await prisma.specialist.findFirst({
+    where: { id, kyc: { status: "APPROVED" }, isPublic: true },
+    include: publicSpecialistInclude,
   });
-  if (!model) return undefined;
-  return toPublicModel(model);
+  if (!specialist) return undefined;
+  return toPublicSpecialist(specialist);
 }
 
-export async function listFeaturedModels(limit = 4): Promise<PublicModel[]> {
-  const models = await prisma.model.findMany({
-    where: { kyc: { status: "APPROVED" }, hiddenFromCatalog: false },
-    include: publicModelInclude,
+export async function listFeaturedSpecialists(limit = 4): Promise<PublicSpecialist[]> {
+  const specialists = await prisma.specialist.findMany({
+    where: { kyc: { status: "APPROVED" }, isPublic: true },
+    include: publicSpecialistInclude,
     orderBy: [{ createdAt: "desc" }],
     take: limit,
   });
-  return Promise.all(models.map(toPublicModel));
+  return Promise.all(specialists.map(toPublicSpecialist));
 }
 
-// ---------- Catalog filter options (real DB, no fixtures) ----------
+// ---------- Sucursales (landing) ----------
 
-export async function listPublicCategories() {
-  return prisma.category.findMany({
+export interface PublicSucursal {
+  id: string;
+  name: string;
+  address: string;
+  phone: string | null;
+  openTime: string;
+  closeTime: string;
+}
+
+export async function listPublicSucursales(): Promise<PublicSucursal[]> {
+  return prisma.sucursal.findMany({
+    where: { isActive: true },
+    orderBy: { name: "asc" },
+    select: { id: true, name: true, address: true, phone: true, openTime: true, closeTime: true },
+  });
+}
+
+// ---------- Catálogo de especialidades (filtros públicos) ----------
+
+export async function listPublicSpecialties() {
+  return prisma.specialty.findMany({
     where: { enabled: true },
     orderBy: { name: "asc" },
     select: { id: true, name: true },
   });
-}
-
-export async function listPublicActivities() {
-  return prisma.activity.findMany({
-    where: { enabled: true },
-    orderBy: { name: "asc" },
-    select: { id: true, name: true },
-  });
-}
-
-export interface PublicGeografia {
-  countries: { id: string; name: string }[];
-  states: { id: string; name: string; countryId: string }[];
-  municipalities: { id: string; name: string; stateId: string }[];
-}
-
-export async function listPublicGeografia(): Promise<PublicGeografia> {
-  const [countries, states, municipalities] = await Promise.all([
-    prisma.country.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }),
-    prisma.state.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true, countryId: true } }),
-    prisma.municipality.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true, stateId: true } }),
-  ]);
-  return { countries, states, municipalities };
 }
 
 export interface PortfolioEntryPublico {
@@ -176,12 +124,8 @@ export interface PortfolioEvent {
   clientName: string;
 }
 
-// The mock AgencyEvent/Client fixtures this used to read from were removed
-// when the admin bookings/clientes modules were deleted, and the marketing
-// photo gallery (EventoFoto) that later replaced them was itself retired in
-// the Biomaternal pivot (see CLAUDE-biomaternal.md). This public page
-// (src/app/(public)/portafolio) still exists and is footer-linked, but has no
-// real data source; stubbed to empty like listPortfolioEntradas above.
+// Stubbed to empty — no real data source (see git history for context on
+// prior EventoFoto/AgencyEvent fixtures, retired in the Biomaternal pivot).
 export async function listPortfolioEvents(): Promise<PortfolioEvent[]> {
   return [];
 }

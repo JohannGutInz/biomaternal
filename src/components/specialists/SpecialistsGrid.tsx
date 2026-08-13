@@ -4,48 +4,48 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { MapPin, Search } from "lucide-react";
-import type { ModelWithRelations } from "@/lib/data";
+import type { SpecialistWithRelations } from "@/lib/data";
 import { Avatar } from "@/components/ui/Avatar";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { APP_ROUTE } from "@/lib/routes";
-import { formatDate, formatFullName, getMainPhotoUrl } from "@/lib/utils";
+import { formatDate, formatFullName } from "@/lib/utils";
 
 const GENRE_LABEL: Record<string, string> = {
   MALE: "Masculino",
   FEMALE: "Femenino",
 };
 
-export function ModelsGrid({ models }: { models: ModelWithRelations[] }) {
+export function SpecialistsGrid({ specialists }: { specialists: SpecialistWithRelations[] }) {
   const [query, setQuery] = useState("");
   const [gender, setGender] = useState("todos");
-  const [categoryId, setCategoryId] = useState("todas");
+  const [specialtyId, setSpecialtyId] = useState("todas");
   const [visibility, setVisibility] = useState("todos");
 
-  const allCategories = useMemo(() => {
+  const allSpecialties = useMemo(() => {
     const map = new Map<string, string>();
-    for (const m of models) {
-      for (const c of m.categories) map.set(c.id, c.name);
+    for (const s of specialists) {
+      for (const sp of s.specialties) map.set(sp.id, sp.name);
     }
     return Array.from(map.entries()).sort((a, b) => a[1].localeCompare(b[1]));
-  }, [models]);
+  }, [specialists]);
 
   const filtered = useMemo(() => {
-    return models.filter((m) => {
+    return specialists.filter((s) => {
       const matchQuery =
         query.trim() === "" ||
-        formatFullName(m).toLowerCase().includes(query.toLowerCase()) ||
-        m.email.toLowerCase().includes(query.toLowerCase());
-      const matchGender = gender === "todos" || m.genre === gender;
-      const matchCategory =
-        categoryId === "todas" || m.categories.some((c) => c.id === categoryId);
+        formatFullName(s).toLowerCase().includes(query.toLowerCase()) ||
+        s.email.toLowerCase().includes(query.toLowerCase());
+      const matchGender = gender === "todos" || s.genre === gender;
+      const matchSpecialty =
+        specialtyId === "todas" || s.specialties.some((sp) => sp.id === specialtyId);
       const matchVisibility =
         visibility === "todos" ||
-        (visibility === "activos" && !m.hiddenFromCatalog) ||
-        (visibility === "ocultos" && m.hiddenFromCatalog);
-      return matchQuery && matchGender && matchCategory && matchVisibility;
+        (visibility === "publicos" && s.isPublic) ||
+        (visibility === "ocultos" && !s.isPublic);
+      return matchQuery && matchGender && matchSpecialty && matchVisibility;
     });
-  }, [models, query, gender, categoryId, visibility]);
+  }, [specialists, query, gender, specialtyId, visibility]);
 
   return (
     <div>
@@ -63,72 +63,72 @@ export function ModelsGrid({ models }: { models: ModelWithRelations[] }) {
           <option value="MALE">Masculino</option>
           <option value="FEMALE">Femenino</option>
         </Select>
-        <Select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} className="w-full text-zinc-600 sm:w-auto">
-          <option value="todas">Todas las categorías</option>
-          {allCategories.map(([id, name]) => (
+        <Select value={specialtyId} onChange={(e) => setSpecialtyId(e.target.value)} className="w-full text-zinc-600 sm:w-auto">
+          <option value="todas">Todas las especialidades</option>
+          {allSpecialties.map(([id, name]) => (
             <option key={id} value={id}>
               {name}
             </option>
           ))}
         </Select>
         <Select value={visibility} onChange={(e) => setVisibility(e.target.value)} className="w-full text-zinc-600 sm:w-auto">
-          <option value="todos">Activos y ocultos</option>
-          <option value="activos">Solo activos</option>
+          <option value="todos">Públicos y ocultos</option>
+          <option value="publicos">Solo públicos</option>
           <option value="ocultos">Solo ocultos</option>
         </Select>
         <span className="text-xs text-zinc-400 sm:ml-auto">
-          {filtered.length} de {models.length} modelos
+          {filtered.length} de {specialists.length} especialistas
         </span>
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {filtered.map((model) => (
+        {filtered.map((specialist) => (
           <Link
-            key={model.id}
-            href={`${APP_ROUTE.app.models.index}/${model.id}`}
+            key={specialist.id}
+            href={`${APP_ROUTE.app.specialists.index}/${specialist.id}`}
             className="group overflow-hidden rounded-xl border border-zinc-200 bg-white transition-shadow hover:shadow-md"
           >
             <div className="relative flex h-40 items-center justify-center overflow-hidden bg-gradient-to-br from-zinc-900 via-zinc-950 to-black">
-              {getMainPhotoUrl(model.assets) ? (
+              {specialist.photoUrl ? (
                 <Image
-                  src={getMainPhotoUrl(model.assets)!}
-                  alt={formatFullName(model)}
+                  src={specialist.photoUrl}
+                  alt={formatFullName(specialist)}
                   fill
                   className="object-cover transition-transform duration-300 group-hover:scale-105"
                   unoptimized
                 />
               ) : (
-                <Avatar name={formatFullName(model)} size="xl" />
+                <Avatar name={formatFullName(specialist)} size="xl" />
               )}
             </div>
             <div className="p-4">
               <div className="flex items-start justify-between gap-2">
                 <div>
-                  <p className="truncate text-sm font-semibold text-zinc-900">{formatFullName(model)}</p>
-                  <p className="text-xs text-zinc-400">{formatDate(model.birthDate)}</p>
+                  <p className="truncate text-sm font-semibold text-zinc-900">{formatFullName(specialist)}</p>
+                  <p className="text-xs text-zinc-400">{formatDate(specialist.birthDate)}</p>
                 </div>
                 <span className="shrink-0 rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600">
-                  {GENRE_LABEL[model.genre] ?? model.genre}
+                  {GENRE_LABEL[specialist.genre] ?? specialist.genre}
                 </span>
               </div>
               <span
                 className={`mt-2 inline-flex w-fit items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-                  model.hiddenFromCatalog ? "bg-zinc-100 text-zinc-500" : "bg-emerald-50 text-emerald-700"
+                  specialist.isPublic ? "bg-emerald-50 text-emerald-700" : "bg-zinc-100 text-zinc-500"
                 }`}
               >
-                {model.hiddenFromCatalog ? "Oculto" : "Visible"}
+                {specialist.isPublic ? "Visible" : "Oculto"}
               </span>
-              <div className="mt-3 flex items-center gap-1 text-xs text-zinc-500">
-                <MapPin className="h-3.5 w-3.5 shrink-0" />
-                <span className="truncate">
-                  {model.city.name}, {model.city.state.name}
-                </span>
-              </div>
-              {model.categories.length > 0 && (
+              {specialist.location && (
+                <div className="mt-3 flex items-center gap-1 text-xs text-zinc-500">
+                  <MapPin className="h-3.5 w-3.5 shrink-0" />
+                  <span className="truncate">{specialist.location}</span>
+                </div>
+              )}
+              {specialist.specialties.length > 0 && (
                 <div className="mt-3 flex flex-wrap gap-1 border-t border-zinc-100 pt-3">
-                  {model.categories.map((c) => (
-                    <span key={c.id} className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-600">
-                      {c.name}
+                  {specialist.specialties.map((sp) => (
+                    <span key={sp.id} className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-600">
+                      {sp.name}
                     </span>
                   ))}
                 </div>
@@ -140,7 +140,7 @@ export function ModelsGrid({ models }: { models: ModelWithRelations[] }) {
 
       {filtered.length === 0 && (
         <div className="rounded-xl border border-dashed border-zinc-300 py-16 text-center text-sm text-zinc-400">
-          Ningún modelo coincide con los filtros aplicados.
+          Ningún especialista coincide con los filtros aplicados.
         </div>
       )}
     </div>
