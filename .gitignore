@@ -53,3 +53,7 @@ glam.html
 
 # Respaldos de datos pre-migración (contienen datos reales del cliente)
 /backups/
+
+# Excel de origen de registro-consultas.md — contiene nombres/teléfonos
+# reales de pacientes y especialistas; el repo es público.
+/Registro_Consultorios_Renta.xlsx

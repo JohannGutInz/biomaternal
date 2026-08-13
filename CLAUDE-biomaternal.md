@@ -110,7 +110,17 @@ Un cobro se liga a una reserva. En Fase 1 es **registro manual** (no pasarela). 
 `id, name (unique), enabled`. M:N con `Specialist`.
 
 ### Enums nuevos/renombrados
-`UserRole {ADMIN, STAFF, SPECIALIST}` · `ReservationType {FULL_DAY, HOURLY}` · `ReservationStatus {PENDING, CONFIRMED, CANCELLED, COMPLETED, NO_SHOW}` · `ChargeStatus {PENDING, PAID, WAIVED}` · `ChargeMethod {CASH, TRANSFER, CARD}`. Se conserva `KycStatus` para verificación.
+`UserRole {ADMIN, STAFF, SPECIALIST}` · `ReservationType {FULL_DAY, HOURLY}` · `ReservationStatus {PENDING, CONFIRMED, CANCELLED, COMPLETED, NO_SHOW, POSTPONED}` · `ChargeStatus {PENDING, PAID, WAIVED}` · `ChargeMethod {CASH, TRANSFER, CARD}`. Se conserva `KycStatus` para verificación.
+
+### Seguimiento de recepción (`registro-consultas.md`, ver Fase 2.5)
+
+`Reservation` se extendió con `patientName`, `patientPhone`, `cancellationReason`, `inbodyIncluded`
+(la cita con paciente vive en la misma tabla que la reserva del consultorio, no en una entidad
+aparte — ver decisión en Fase 2.5). Cuatro entidades nuevas, independientes de `Reservation`:
+`InbodySale`, `WhatsappRequest`, `CallLog`, `B2bProspect`. `Specialist` ganó `active` (estatus
+operativo) y `defaultConsultorioId` (consultorio habitual). El detalle campo por campo está en
+`registro-consultas.md`, que es la especificación funcional que se siguió al pie de la letra —
+este documento no la duplica.
 
 ---
 
@@ -171,8 +181,34 @@ Calculables sobre `Reservation` + `Charge` + `Consultorio` + `Sucursal`:
 14. ✅ (adelantado en Fase 1) Landing pública: sucursales + directorio de especialistas públicos + contacto. Copy de páginas estáticas (`/servicios`, `/historia`, etc.) sigue pendiente de reescritura.
 15. Correo transaccional: confirmación/recordatorio de reserva (`resend`) — el helper de correo existe pero no hay trigger automático en `crearReservationAction` todavía.
 
+### Fase 2.5 — Seguimiento de recepción (registro-consultas.md) ✅ completa
+
+Especificación funcional formal entregada por el cliente (`registro-consultas.md`), reconstruye
+1:1 el Excel operativo real de recepción. Decisiones de integración con lo ya construido en Fase 1
+(confirmadas antes de implementar, ver histórico de la conversación):
+
+16. ✅ `Reservation` se extiende (no una tabla `Cita` aparte) con `patientName`/`patientPhone`
+    (obligatorio en UI solo cuando `type = HOURLY`), `cancellationReason` (exigido al cancelar) e
+    `inbodyIncluded`. Se conserva el flujo `PENDING/CONFIRMED` de apartado anticipado; se agrega
+    `POSTPONED` junto a los 5 estados existentes.
+17. ✅ El precio (`priceApplied`) dejó de calcularse solo por tarifa de consultorio — se captura a
+    mano al marcar la cita como Realizada (varía por especialista/promoción en el negocio real, no
+    hay `PricingRule` construido). Al capturarlo junto con método de pago se genera el `Charge`
+    automáticamente; el flujo pendiente→pagado de Cobros no cambia.
+18. ✅ `InbodySale` (ventas fuera de consulta), `WhatsappRequest` (agenda WhatsApp),
+    `CallLog` (llamadas y conversión), `B2bProspect` (prospección B2B) — cuatro módulos nuevos en
+    el backoffice, agrupados bajo "Recepción" en el sidebar.
+19. ✅ Especialistas: `active` (estatus operativo) y `defaultConsultorioId` (consultorio habitual)
+    expuestos en alta/edición; el selector de especialista al reservar solo lista activos.
+20. ✅ Página **Reportes** (`/app/reportes`): reporte semanal completo (flujo de pacientes, agenda
+    WhatsApp, conversión de llamadas, InBody, flujo B2B, ingreso total) y reporte por especialista,
+    con filtro de rango de fechas y sucursal.
+21. ⏳ Diferido a propósito (mejoras sugeridas en el propio documento, no en el Excel original):
+    promoción automática de un `B2bProspect` confirmado a `Specialist`, y enlace automático de un
+    `WhatsappRequest` concretado a la `Reservation` que genera. Hoy son manuales.
+
 ### Fase 3 — Extensiones (fuera de este alcance)
-Pacientes y citas médicas, expediente, facturación CFDI, pagos en línea, roles por sucursal, cumplimiento NOM-024.
+Expediente clínico y cumplimiento NOM-024, citas médicas más allá de agenda/contacto, facturación CFDI, pagos en línea, roles por sucursal.
 
 ---
 
@@ -184,11 +220,14 @@ Aprovechar sin reescribir: auth JWT (`lib/session.ts`), server actions (`lib/act
 
 ## 11. Riesgos y decisiones abiertas
 
-- **No-solape de reservas**: definir si se bloquea a nivel BD (`EXCLUDE USING gist` con rango temporal) o solo en servicio. Recomendado: constraint + verificación transaccional.
-- **Tarifas**: ¿fijas por consultorio o reglas por horario/día/especialista? Fase 1 sugiere fijas en `Consultorio`; migrar a `PricingRule` si se necesita flexibilidad.
-- **Cancelaciones y cobros**: política de cobro ante cancelación tardía / no-show (afecta KPIs e ingresos).
-- **Zona horaria**: fijar por sucursal para cálculo correcto de ocupación.
+- **No-solape de reservas**: definir si se bloquea a nivel BD (`EXCLUDE USING gist` con rango temporal) o solo en servicio. Recomendado: constraint + verificación transaccional. ✅ **Resuelto** — ambas capas, en producción desde Fase 1, sin cambios en Fase 2.5.
+- **Tarifas por especialista y plan**: ✅ **Resuelto** — `registro-consultas.md` confirma que `costo_renta` se captura a mano (no hay `PricingRule` de planes tipo HAPPY HOUR/GOLDEN TICKET). Se implementó captura manual al completar la cita. Si en el futuro el negocio quiere automatizar tarifas por plan, ahí sí haría falta diseñar `PricingRule` desde cero.
+- **Citas de 1 hora en horas fijas**: `registro-consultas.md` (la especificación formal) **no** exige esta restricción — `hora_inicio`/`hora_fin` son libres, solo se valida `hora_fin > hora_inicio`. No se implementó como regla dura; si en la práctica el negocio sí necesita horas fijas en grid, hay que pedirlo explícitamente.
+- **"Hora fija" vs. "hora variable"**: no aparece como distinción en la especificación formal — se mantiene el `ReservationType {FULL_DAY, HOURLY}` existente sin un tercer tipo.
+- **Cancelaciones y cobros**: política de cobro ante cancelación tardía / no-show (afecta KPIs e ingresos). Sigue sin definirse — hoy cancelar solo pide motivo, no genera ningún cargo.
+- **Zona horaria**: fijar por sucursal para cálculo correcto de ocupación. Hoy `Sucursal.timezone` existe en el schema pero no se usa en ningún cálculo (KPIs de ocupación corren en hora del servidor). **Sigue sin resolverse.**
 - **Verificación de especialista**: alcance de documentos requeridos (cédula, título, identificación).
+- **Dimensión sucursal en InBody/WhatsApp/Llamadas/B2B**: ninguna de las 4 entidades de recepción tiene sucursal (ni la tenía el Excel original — mejora sugerida en `registro-consultas.md` §7, no implementada). El filtro de sucursal en Reportes solo afecta las métricas de reservas.
 
 ---
 
