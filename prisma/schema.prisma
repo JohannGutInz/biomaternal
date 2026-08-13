@@ -31,7 +31,8 @@ model Specialty {
   name    String  @unique
   enabled Boolean @default(true)
 
-  specialists Specialist[]
+  specialists  Specialist[]
+  b2bProspects B2bProspect[]
 
   @@map("specialties")
 }
@@ -103,6 +104,15 @@ model Specialist {
   isPublic      Boolean @default(false) @map("is_public")
   internalNotes String? @map("internal_notes")
 
+  // Activo/Inactivo operativo (catálogo de recepción) — independiente de isPublic
+  // (visibilidad en landing) y de kyc.status (verificación): un especialista puede
+  // estar aprobado y ser público, y aun así estar temporalmente inactivo.
+  active Boolean @default(true) @map("active")
+
+  // Consultorio habitual — solo sugerencia/default al agendar, no restringe.
+  defaultConsultorioId String?      @map("default_consultorio_id")
+  defaultConsultorio   Consultorio? @relation("SpecialistDefaultConsultorio", fields: [defaultConsultorioId], references: [id])
+
   kycId String @unique @map("kyc_id")
   kyc   Kyc    @relation(fields: [kycId], references: [id])
 
@@ -111,7 +121,8 @@ model Specialist {
 
   specialties Specialty[]
 
-  reservations Reservation[]
+  reservations     Reservation[]
+  whatsappRequests WhatsappRequest[]
 
   @@map("specialists")
 }
@@ -148,6 +159,8 @@ model Consultorio {
   fotos        ConsultorioFoto[]
   reservations Reservation[]
 
+  specialistsWithDefault Specialist[] @relation("SpecialistDefaultConsultorio")
+
   @@map("consultorios")
 }
 
@@ -175,6 +188,7 @@ enum ReservationStatus {
   CANCELLED
   COMPLETED
   NO_SHOW
+  POSTPONED
 }
 
 // Integridad de no-solape: constraint EXCLUDE USING gist a nivel BD (ver
@@ -182,16 +196,26 @@ enum ReservationStatus {
 // transaccional en el servicio (src/lib/actions.ts). Ninguno de los dos basta
 // solo: la UI no es la fuente de verdad.
 model Reservation {
-  id     String @id @default(uuid())
+  id      String   @id @default(uuid())
   startAt DateTime @map("start_at")
   endAt   DateTime @map("end_at")
 
   type         ReservationType
   status       ReservationStatus @default(PENDING)
+  // Monto acordado por la renta — capturado a mano (varía por especialista y
+  // promoción del momento, no hay tarifa fija automática), no calculado.
   priceApplied Int?              @map("price_applied")
   notes        String?
   createdBy    String?           @map("created_by")
   createdAt    DateTime          @default(now()) @map("created_at")
+
+  // Datos de la cita con paciente — opcionales a nivel de esquema porque una
+  // reserva FULL_DAY (jornada completa) no corresponde a un solo paciente;
+  // la UI los exige cuando type = HOURLY (ver reservationSchema en schemas.ts).
+  patientName        String? @map("patient_name")
+  patientPhone       String? @map("patient_phone")
+  cancellationReason String? @map("cancellation_reason")
+  inbodyIncluded     Boolean @default(false) @map("inbody_included")
 
   consultorioId String      @map("consultorio_id")
   consultorio   Consultorio @relation(fields: [consultorioId], references: [id])
@@ -199,7 +223,8 @@ model Reservation {
   specialistId String     @map("specialist_id")
   specialist   Specialist @relation(fields: [specialistId], references: [id])
 
-  charge Charge?
+  charge          Charge?
+  whatsappRequest WhatsappRequest?
 
   @@index([consultorioId])
   @@index([specialistId])
@@ -219,17 +244,111 @@ enum ChargeMethod {
 }
 
 model Charge {
-  id       String       @id @default(uuid())
-  amount   Int
-  currency String       @default("MXN")
-  method   ChargeMethod
-  status   ChargeStatus @default(PENDING)
-  paidAt   DateTime?    @map("paid_at")
-  createdBy String?     @map("created_by")
-  createdAt DateTime    @default(now()) @map("created_at")
+  id        String       @id @default(uuid())
+  amount    Int
+  currency  String       @default("MXN")
+  method    ChargeMethod
+  status    ChargeStatus @default(PENDING)
+  paidAt    DateTime?    @map("paid_at")
+  createdBy String?      @map("created_by")
+  createdAt DateTime     @default(now()) @map("created_at")
 
   reservationId String      @unique @map("reservation_id")
   reservation   Reservation @relation(fields: [reservationId], references: [id], onDelete: Cascade)
 
   @@map("charges")
+}
+
+// ---------- Seguimiento de recepción (registro-consultas.md) ----------
+// Ventas InBody, agenda de WhatsApp, llamadas y prospección B2B: entidades
+// independientes de Reservation, tal como en el Excel de origen (§7 del
+// documento de referencia — no llevan FK a Specialist salvo donde el propio
+// documento lo especifica).
+
+enum InbodyClientType {
+  CORPORATE
+  PUBLIC
+}
+
+// Venta de InBody fuera de consulta (no ocupa consultorio). El InBody hecho
+// durante una consulta se marca con Reservation.inbodyIncluded, no aquí.
+model InbodySale {
+  id          String           @id @default(uuid())
+  date        DateTime         @db.Date
+  clientName  String           @map("client_name")
+  clientPhone String?          @map("client_phone")
+  type        InbodyClientType
+  price       Int
+  notes       String?
+  createdBy   String?          @map("created_by")
+  createdAt   DateTime         @default(now()) @map("created_at")
+
+  @@map("inbody_sales")
+}
+
+// Solicitud entrante por WhatsApp — no siempre se concreta en una cita.
+model WhatsappRequest {
+  id            String   @id @default(uuid())
+  date          DateTime @db.Date
+  contact       String
+  confirmed     Boolean  @map("confirmed")
+  declineReason String?  @map("decline_reason")
+  notes         String?
+  createdBy     String?  @map("created_by")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  specialistId String?     @map("specialist_id")
+  specialist   Specialist? @relation(fields: [specialistId], references: [id])
+
+  // Enlace opcional a la reserva que se generó cuando confirmed = true
+  // (mejora sugerida en el documento, no existe en el Excel original).
+  reservationId String?      @unique @map("reservation_id")
+  reservation   Reservation? @relation(fields: [reservationId], references: [id])
+
+  @@map("whatsapp_requests")
+}
+
+enum CallDirection {
+  INBOUND
+  OUTBOUND
+}
+
+model CallLog {
+  id                   String        @id @default(uuid())
+  date                 DateTime      @db.Date
+  contactName          String        @map("contact_name")
+  direction            CallDirection
+  isNewContact         Boolean       @map("is_new_contact")
+  generatedAppointment Boolean       @map("generated_appointment")
+  notes                String?
+  createdBy            String?       @map("created_by")
+  createdAt            DateTime      @default(now()) @map("created_at")
+
+  @@map("call_logs")
+}
+
+enum B2bStatus {
+  INTERESTED
+  NEGOTIATING
+  CONFIRMED
+  DISCARDED
+}
+
+// Prospección de especialistas nuevos interesados en rentar, previo al
+// registro/KYC formal. `specialistName` es texto libre a propósito (el
+// prospecto aún no tiene registro en `especialistas`).
+model B2bProspect {
+  id               String    @id @default(uuid())
+  date             DateTime  @db.Date
+  specialistName   String    @map("specialist_name")
+  status           B2bStatus @default(INTERESTED)
+  scheduleIncident Boolean   @default(false) @map("schedule_incident")
+  notes            String?
+  createdBy        String?   @map("created_by")
+  createdAt        DateTime  @default(now()) @map("created_at")
+
+  specialtyId String?    @map("specialty_id")
+  specialty   Specialty? @relation(fields: [specialtyId], references: [id])
+
+  @@map("b2b_prospects")
 }
