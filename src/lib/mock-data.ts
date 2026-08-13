@@ -113,8 +113,8 @@ export const siteSettings: SiteSettings = {
   agencyName: "Biomaternal",
   logoUrl: "",
   primaryColor: "#17ACE3",
-  heroTitle: "SOMOS LO QUE QUIERES VER",
-  heroSubtitle: "AGENCIA DE MODELOS Y EDECANES / PROTOCOLO",
+  heroTitle: "Cuidamos cada etapa de tu salud y la de tu familia",
+  heroSubtitle: "Especialistas verificados / Consultorios en 3 sucursales",
   publicRegistrationActive: true,
   registrationLinkSlug: "registro-biomaternal-2026",
 };
