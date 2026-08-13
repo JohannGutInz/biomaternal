@@ -27,6 +27,7 @@ const STATUS_TONE: Record<string, BadgeTone> = {
   REQUIRES_CHANGES: "warning",
   enviado: "gold",
   planeado: "info",
+  POSTPONED: "info",
   borrador: "neutral",
   inactivo: "neutral",
   no_disponible: "neutral",

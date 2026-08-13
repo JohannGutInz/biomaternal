@@ -24,7 +24,15 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function NuevoEspecialistaForm({ specialties }: { specialties: Specialty[] }) {
+type ConsultorioOption = { id: string; name: string };
+
+export function NuevoEspecialistaForm({
+  specialties,
+  consultorios,
+}: {
+  specialties: Specialty[];
+  consultorios: ConsultorioOption[];
+}) {
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
   const photoRef = useRef<SpecialistPhotoUploadHandle>(null);
@@ -93,6 +101,12 @@ export function NuevoEspecialistaForm({ specialties }: { specialties: Specialty[
         <div className="grid grid-cols-1 gap-4">
           <Input label="Cédula profesional" {...register("licenseNumber")} error={errors.licenseNumber?.message} />
           <Textarea label="Biografía" rows={4} {...register("bio")} error={errors.bio?.message} />
+          <Select label="Consultorio habitual (opcional)" {...register("defaultConsultorioId")} error={errors.defaultConsultorioId?.message}>
+            <option value="">Sin definir</option>
+            {consultorios.map((c) => (
+              <option key={c.id} value={c.id}>{c.name}</option>
+            ))}
+          </Select>
           <Controller
             name="specialtyIds"
             control={control}

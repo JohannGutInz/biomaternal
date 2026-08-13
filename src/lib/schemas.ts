@@ -59,8 +59,12 @@ export const registrationActionSchema = registrationFormSchema.omit({ captchaAns
 
 export const ownSpecialistProfileSchema = specialistFieldsSchema;
 
+// active y defaultConsultorioId son operativos (recepción), no aplican al
+// auto-registro público ni al perfil propio del especialista.
 export const specialistEditSchema = specialistFieldsSchema.extend({
   isPublic: z.boolean(),
+  active: z.boolean(),
+  defaultConsultorioId: z.string().optional(),
 });
 
 export type LoginData = z.infer<typeof loginSchema>;
@@ -77,6 +81,7 @@ export const nuevoEspecialistaAdminFormSchema = z.object({
   email: z.email("Correo electrónico inválido."),
   birthDate: z.string().min(1, "La fecha de nacimiento es obligatoria."),
   gender: z.enum(["MALE", "FEMALE"], { error: "Selecciona un género." }),
+  defaultConsultorioId: z.string().optional(),
 }).merge(specialistFieldsSchema);
 
 export type NuevoEspecialistaAdminFormData = z.infer<typeof nuevoEspecialistaAdminFormSchema>;
@@ -115,6 +120,12 @@ const reservationBaseSchema = z.object({
   type: z.enum(["FULL_DAY", "HOURLY"], { error: "Selecciona el tipo de reserva." }),
   startAt: z.string().min(1, "La fecha/hora de inicio es obligatoria."),
   endAt: z.string().min(1, "La fecha/hora de fin es obligatoria."),
+  // Una reserva HOURLY es una cita con un paciente puntual; una FULL_DAY es
+  // la jornada completa de un especialista (varios pacientes), por eso el
+  // paciente no aplica ahí — se exige solo cuando type = HOURLY (ver refine).
+  patientName: z.string().optional(),
+  patientPhone: z.string().optional(),
+  inbodyIncluded: z.boolean(),
   notes: z.string().optional(),
 });
 
@@ -123,21 +134,44 @@ const endAfterStartRefinement = {
   message: "La hora de fin debe ser posterior a la de inicio.",
 } as const;
 
-export const reservationSchema = reservationBaseSchema.refine(endAfterStartRefinement.check, {
-  message: endAfterStartRefinement.message,
-  path: ["endAt"],
-});
+const patientRequiredForHourlyRefinement = {
+  check: (d: { type: string; patientName?: string }) => d.type !== "HOURLY" || !!d.patientName?.trim(),
+  message: "El nombre del paciente es obligatorio para una cita por hora.",
+} as const;
+
+export const reservationSchema = reservationBaseSchema
+  .refine(endAfterStartRefinement.check, { message: endAfterStartRefinement.message, path: ["endAt"] })
+  .refine(patientRequiredForHourlyRefinement.check, { message: patientRequiredForHourlyRefinement.message, path: ["patientName"] });
 
 export type ReservationData = z.infer<typeof reservationSchema>;
 
 // Portal del especialista: mismo formulario sin specialistId — se deriva de
 // la sesión en el servidor, nunca se confía en lo que mande el cliente.
-export const reservationSelfSchema = reservationBaseSchema.omit({ specialistId: true }).refine(endAfterStartRefinement.check, {
-  message: endAfterStartRefinement.message,
-  path: ["endAt"],
-});
+export const reservationSelfSchema = reservationBaseSchema
+  .omit({ specialistId: true })
+  .refine(endAfterStartRefinement.check, { message: endAfterStartRefinement.message, path: ["endAt"] })
+  .refine(patientRequiredForHourlyRefinement.check, { message: patientRequiredForHourlyRefinement.message, path: ["patientName"] });
 
 export type ReservationSelfData = z.infer<typeof reservationSelfSchema>;
+
+export const cancelReservationSchema = z.object({
+  reservationId: z.string().min(1),
+  cancellationReason: z.string().min(1, "El motivo de cancelación es obligatorio."),
+});
+
+export type CancelReservationData = z.infer<typeof cancelReservationSchema>;
+
+// Al marcar una reserva como Realizada se puede capturar/ajustar el monto
+// acordado y, si ya se cobró, generar el cobro correspondiente de una vez.
+// Ambos campos son opcionales; el formulario normaliza "" / NaN a undefined
+// vía `setValueAs` antes de que llegue aquí (ver CompleteReservationModal).
+export const completeReservationSchema = z.object({
+  reservationId: z.string().min(1),
+  priceApplied: z.number().int().nonnegative().optional(),
+  chargeMethod: z.enum(["CASH", "TRANSFER", "CARD"]).optional(),
+});
+
+export type CompleteReservationData = z.infer<typeof completeReservationSchema>;
 
 export const chargeSchema = z.object({
   reservationId: z.string().min(1),
@@ -146,3 +180,54 @@ export const chargeSchema = z.object({
 });
 
 export type ChargeData = z.infer<typeof chargeSchema>;
+
+// ---------- Seguimiento de recepción (InBody, WhatsApp, llamadas, B2B) ----------
+
+export const inbodySaleSchema = z.object({
+  date: z.string().min(1, "La fecha es obligatoria."),
+  clientName: z.string().min(1, "El nombre del cliente es obligatorio."),
+  clientPhone: z.string().optional(),
+  type: z.enum(["CORPORATE", "PUBLIC"], { error: "Selecciona el tipo de cliente." }),
+  price: z.number().int().nonnegative("El precio no puede ser negativo."),
+  notes: z.string().optional(),
+});
+
+export type InbodySaleData = z.infer<typeof inbodySaleSchema>;
+
+const whatsappRequestBaseSchema = z.object({
+  date: z.string().min(1, "La fecha es obligatoria."),
+  contact: z.string().min(1, "El nombre o teléfono del contacto es obligatorio."),
+  specialistId: z.string().optional(),
+  confirmed: z.boolean(),
+  declineReason: z.string().optional(),
+  notes: z.string().optional(),
+});
+
+export const whatsappRequestSchema = whatsappRequestBaseSchema.refine(
+  (d) => d.confirmed || !!d.declineReason?.trim(),
+  { message: "Indica el motivo si no se concretó la cita.", path: ["declineReason"] },
+);
+
+export type WhatsappRequestData = z.infer<typeof whatsappRequestSchema>;
+
+export const callLogSchema = z.object({
+  date: z.string().min(1, "La fecha es obligatoria."),
+  contactName: z.string().min(1, "El nombre es obligatorio."),
+  direction: z.enum(["INBOUND", "OUTBOUND"], { error: "Selecciona el tipo de llamada." }),
+  isNewContact: z.boolean(),
+  generatedAppointment: z.boolean(),
+  notes: z.string().optional(),
+});
+
+export type CallLogData = z.infer<typeof callLogSchema>;
+
+export const b2bProspectSchema = z.object({
+  date: z.string().min(1, "La fecha es obligatoria."),
+  specialistName: z.string().min(1, "El nombre del especialista interesado es obligatorio."),
+  specialtyId: z.string().optional(),
+  status: z.enum(["INTERESTED", "NEGOTIATING", "CONFIRMED", "DISCARDED"], { error: "Selecciona un estatus." }),
+  scheduleIncident: z.boolean(),
+  notes: z.string().optional(),
+});
+
+export type B2bProspectData = z.infer<typeof b2bProspectSchema>;

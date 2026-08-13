@@ -2,13 +2,13 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { NuevoEspecialistaForm } from "@/components/specialists/NuevoEspecialistaForm";
-import { getCurrentUser, listSpecialties } from "@/lib/data";
+import { getCurrentUser, listSpecialties, listConsultorios } from "@/lib/data";
 import { APP_ROUTE } from "@/lib/routes";
 
 export default async function NuevoEspecialistaPage() {
   await getCurrentUser();
 
-  const specialties = await listSpecialties();
+  const [specialties, consultorios] = await Promise.all([listSpecialties(), listConsultorios()]);
 
   return (
     <div>
@@ -25,7 +25,12 @@ export default async function NuevoEspecialistaPage() {
       />
 
       <div className="mt-8 max-w-2xl">
-        <NuevoEspecialistaForm specialties={specialties} />
+        <NuevoEspecialistaForm
+          specialties={specialties}
+          consultorios={consultorios
+            .filter((c) => c.isActive)
+            .map((c) => ({ id: c.id, name: `${c.name} · ${c.sucursal.name}` }))}
+        />
       </div>
     </div>
   );

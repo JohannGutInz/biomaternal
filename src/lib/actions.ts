@@ -20,7 +20,13 @@ import {
   consultorioSchema,
   reservationSchema,
   reservationSelfSchema,
+  cancelReservationSchema,
+  completeReservationSchema,
   chargeSchema,
+  inbodySaleSchema,
+  whatsappRequestSchema,
+  callLogSchema,
+  b2bProspectSchema,
 } from "./schemas";
 import { deleteObject, keyFromObjectUrl, getSignedDownloadUrl } from "./storage";
 import z from "zod";
@@ -38,7 +44,13 @@ import type {
   ConsultorioData,
   ReservationData,
   ReservationSelfData,
+  CancelReservationData,
+  CompleteReservationData,
   ChargeData,
+  InbodySaleData,
+  WhatsappRequestData,
+  CallLogData,
+  B2bProspectData,
 } from "./schemas";
 import { UserRole } from "@/generated/prisma/enums";
 
@@ -432,6 +444,8 @@ export async function updateSpecialistAction(specialistId: string, data: Special
       location: result.data.location || null,
       photoUrl: newPhotoKey,
       isPublic: result.data.isPublic,
+      active: result.data.active,
+      defaultConsultorioId: result.data.defaultConsultorioId || null,
       specialties: { set: result.data.specialtyIds.map((id) => ({ id })) },
     },
   });
@@ -505,6 +519,7 @@ export async function crearEspecialistaAdminAction(
         bio: d.bio || null,
         location: d.location || null,
         photoUrl: photoKey,
+        defaultConsultorioId: d.defaultConsultorioId || null,
         kycId: kyc.id,
         userId: user.id,
         specialties: { connect: d.specialtyIds.map((id) => ({ id })) },
@@ -592,24 +607,15 @@ export async function toggleConsultorioActiveAction(consultorioId: string, isAct
 
 class ReservationOverlapError extends Error {}
 
-function estimatePrice(
-  type: "FULL_DAY" | "HOURLY",
-  startAt: Date,
-  endAt: Date,
-  rates: { hourlyRate: number | null; dayRate: number | null },
-): number | null {
-  if (type === "FULL_DAY") return rates.dayRate ?? null;
-  if (!rates.hourlyRate) return null;
-  const hours = (endAt.getTime() - startAt.getTime()) / (1000 * 60 * 60);
-  return Math.round(rates.hourlyRate * hours);
-}
-
 async function createReservationTx(d: {
   consultorioId: string;
   specialistId: string;
   type: "FULL_DAY" | "HOURLY";
   startAt: string;
   endAt: string;
+  patientName?: string;
+  patientPhone?: string;
+  inbodyIncluded?: boolean;
   notes?: string;
   createdBy?: string;
 }): Promise<ActionState & { reservationId?: string }> {
@@ -626,14 +632,6 @@ async function createReservationTx(d: {
       });
       if (overlapping) throw new ReservationOverlapError();
 
-      const consultorio = await tx.consultorio.findUnique({
-        where: { id: d.consultorioId },
-        select: { hourlyRate: true, dayRate: true },
-      });
-      const priceApplied = consultorio
-        ? estimatePrice(d.type, new Date(d.startAt), new Date(d.endAt), consultorio)
-        : null;
-
       return tx.reservation.create({
         data: {
           consultorioId: d.consultorioId,
@@ -641,8 +639,10 @@ async function createReservationTx(d: {
           type: d.type,
           startAt: new Date(d.startAt),
           endAt: new Date(d.endAt),
+          patientName: d.patientName || null,
+          patientPhone: d.patientPhone || null,
+          inbodyIncluded: d.inbodyIncluded ?? false,
           notes: d.notes || null,
-          priceApplied,
           createdBy: d.createdBy,
         },
       });
@@ -713,9 +713,11 @@ export async function crearReservationEspecialistaAction(
   });
 }
 
+// Transiciones sin datos adicionales. Cancelar y completar tienen su propia
+// acción porque exigen capturar motivo / monto+método respectivamente.
 export async function cambiarStatusReservationAction(
   reservationId: string,
-  status: "CONFIRMED" | "CANCELLED" | "COMPLETED" | "NO_SHOW",
+  status: "CONFIRMED" | "NO_SHOW" | "POSTPONED",
 ): Promise<ActionState> {
   await requireAdmin();
 
@@ -724,6 +726,69 @@ export async function cambiarStatusReservationAction(
   revalidatePath(APP_ROUTE.app.agenda.index);
 
   return { status: "success", message: "Reserva actualizada." };
+}
+
+export async function cancelarReservationAction(data: CancelReservationData): Promise<ActionState> {
+  await requireAdmin();
+
+  const parsed = cancelReservationSchema.safeParse(data);
+  if (!parsed.success) {
+    return { status: "error", message: parsed.error.issues[0]?.message ?? "Datos inválidos." };
+  }
+
+  await prisma.reservation.update({
+    where: { id: parsed.data.reservationId },
+    data: { status: "CANCELLED", cancellationReason: parsed.data.cancellationReason },
+  });
+  revalidatePath(APP_ROUTE.app.reservas.index);
+  revalidatePath(APP_ROUTE.app.agenda.index);
+
+  return { status: "success", message: "Reserva cancelada." };
+}
+
+// Marcar una cita como Realizada es el momento natural para capturar cuánto
+// se cobró: si se manda monto + método, se genera el cobro correspondiente
+// de una vez (queda PENDING, igual que un cobro registrado a mano — el
+// seguimiento de pendiente→pagado en Cobros no cambia).
+export async function completarReservationAction(data: CompleteReservationData): Promise<ActionState> {
+  const session = await requireAdmin();
+
+  const parsed = completeReservationSchema.safeParse(data);
+  if (!parsed.success) {
+    return { status: "error", message: parsed.error.issues[0]?.message ?? "Datos inválidos." };
+  }
+  const d = parsed.data;
+
+  await prisma.$transaction(async (tx) => {
+    await tx.reservation.update({
+      where: { id: d.reservationId },
+      data: {
+        status: "COMPLETED",
+        ...(d.priceApplied != null && { priceApplied: d.priceApplied }),
+      },
+    });
+
+    if (d.priceApplied != null && d.chargeMethod) {
+      const existing = await tx.charge.findUnique({ where: { reservationId: d.reservationId } });
+      if (!existing) {
+        await tx.charge.create({
+          data: {
+            reservationId: d.reservationId,
+            amount: d.priceApplied,
+            method: d.chargeMethod,
+            status: "PENDING",
+            createdBy: session.username || session.email,
+          },
+        });
+      }
+    }
+  });
+
+  revalidatePath(APP_ROUTE.app.reservas.index);
+  revalidatePath(APP_ROUTE.app.agenda.index);
+  revalidatePath(APP_ROUTE.app.cobros.index);
+
+  return { status: "success", message: "Reserva marcada como realizada." };
 }
 
 // ---------- Cobros ----------
@@ -760,4 +825,132 @@ export async function actualizarChargeStatusAction(
   revalidatePath(APP_ROUTE.app.cobros.index);
 
   return { status: "success", message: "Cobro actualizado." };
+}
+
+// ---------- Ventas InBody ----------
+// Venta fuera de consulta — independiente de Reservation (no ocupa
+// consultorio). El InBody hecho durante una cita se marca aparte
+// (Reservation.inbodyIncluded).
+
+export async function crearInbodySaleAction(data: InbodySaleData): Promise<ActionState> {
+  const session = await requireAdmin();
+
+  const parsed = inbodySaleSchema.safeParse(data);
+  if (!parsed.success) {
+    return { status: "error", message: parsed.error.issues[0]?.message ?? "Datos inválidos." };
+  }
+
+  await prisma.inbodySale.create({
+    data: {
+      date: new Date(parsed.data.date),
+      clientName: parsed.data.clientName,
+      clientPhone: parsed.data.clientPhone || null,
+      type: parsed.data.type,
+      price: parsed.data.price,
+      notes: parsed.data.notes || null,
+      createdBy: session.username || session.email,
+    },
+  });
+  revalidatePath(APP_ROUTE.app.inbody.index);
+  revalidatePath("/app/dashboard");
+
+  return { status: "success", message: "Venta de InBody registrada." };
+}
+
+// ---------- Agenda WhatsApp ----------
+
+export async function crearWhatsappRequestAction(data: WhatsappRequestData): Promise<ActionState> {
+  const session = await requireAdmin();
+
+  const parsed = whatsappRequestSchema.safeParse(data);
+  if (!parsed.success) {
+    return { status: "error", message: parsed.error.issues[0]?.message ?? "Datos inválidos." };
+  }
+
+  await prisma.whatsappRequest.create({
+    data: {
+      date: new Date(parsed.data.date),
+      contact: parsed.data.contact,
+      specialistId: parsed.data.specialistId || null,
+      confirmed: parsed.data.confirmed,
+      declineReason: parsed.data.confirmed ? null : parsed.data.declineReason || null,
+      notes: parsed.data.notes || null,
+      createdBy: session.username || session.email,
+    },
+  });
+  revalidatePath(APP_ROUTE.app.whatsapp.index);
+  revalidatePath("/app/dashboard");
+
+  return { status: "success", message: "Solicitud de WhatsApp registrada." };
+}
+
+// ---------- Llamadas y conversión ----------
+
+export async function crearCallLogAction(data: CallLogData): Promise<ActionState> {
+  const session = await requireAdmin();
+
+  const parsed = callLogSchema.safeParse(data);
+  if (!parsed.success) {
+    return { status: "error", message: parsed.error.issues[0]?.message ?? "Datos inválidos." };
+  }
+
+  await prisma.callLog.create({
+    data: {
+      date: new Date(parsed.data.date),
+      contactName: parsed.data.contactName,
+      direction: parsed.data.direction,
+      isNewContact: parsed.data.isNewContact,
+      generatedAppointment: parsed.data.generatedAppointment,
+      notes: parsed.data.notes || null,
+      createdBy: session.username || session.email,
+    },
+  });
+  revalidatePath(APP_ROUTE.app.llamadas.index);
+  revalidatePath("/app/dashboard");
+
+  return { status: "success", message: "Llamada registrada." };
+}
+
+// ---------- Flujo B2B ----------
+
+export async function crearB2bProspectAction(data: B2bProspectData): Promise<ActionState> {
+  const session = await requireAdmin();
+
+  const parsed = b2bProspectSchema.safeParse(data);
+  if (!parsed.success) {
+    return { status: "error", message: parsed.error.issues[0]?.message ?? "Datos inválidos." };
+  }
+
+  await prisma.b2bProspect.create({
+    data: {
+      date: new Date(parsed.data.date),
+      specialistName: parsed.data.specialistName,
+      specialtyId: parsed.data.specialtyId || null,
+      status: parsed.data.status,
+      scheduleIncident: parsed.data.scheduleIncident,
+      notes: parsed.data.notes || null,
+      createdBy: session.username || session.email,
+    },
+  });
+  revalidatePath(APP_ROUTE.app.b2b.index);
+
+  return { status: "success", message: "Prospecto registrado." };
+}
+
+export async function actualizarB2bProspectStatusAction(
+  prospectId: string,
+  status: "INTERESTED" | "NEGOTIATING" | "CONFIRMED" | "DISCARDED",
+): Promise<ActionState> {
+  await requireAdmin();
+
+  await prisma.b2bProspect.update({ where: { id: prospectId }, data: { status } });
+  revalidatePath(APP_ROUTE.app.b2b.index);
+
+  return {
+    status: "success",
+    message:
+      status === "CONFIRMED"
+        ? "Prospecto confirmado. Puedes darlo de alta como especialista desde 'Especialistas'."
+        : "Prospecto actualizado.",
+  };
 }

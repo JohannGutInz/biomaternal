@@ -199,6 +199,36 @@ export async function listReservationsInRange(from: Date, to: Date, sucursalId?:
   });
 }
 
+// ---------- Ventas InBody ----------
+
+export async function listInbodySales() {
+  return prisma.inbodySale.findMany({ orderBy: { date: "desc" } });
+}
+
+// ---------- Agenda WhatsApp ----------
+
+export async function listWhatsappRequests() {
+  return prisma.whatsappRequest.findMany({
+    include: { specialist: true },
+    orderBy: { date: "desc" },
+  });
+}
+
+// ---------- Llamadas y conversión ----------
+
+export async function listCallLogs() {
+  return prisma.callLog.findMany({ orderBy: { date: "desc" } });
+}
+
+// ---------- Flujo B2B ----------
+
+export async function listB2bProspects() {
+  return prisma.b2bProspect.findMany({
+    include: { specialty: true },
+    orderBy: { date: "desc" },
+  });
+}
+
 // ---------- Cobros ----------
 
 export type ChargeWithReservation = Awaited<ReturnType<typeof listCharges>>[number];
@@ -314,4 +344,137 @@ export async function getDashboardKpis() {
     .slice(0, 5);
 
   return { occupancy, revenue, topSpecialists };
+}
+
+// ---------- Reporte semanal / por especialista (registro-consultas.md §5) ----------
+
+function safeRatio(numerator: number, denominator: number): number {
+  return denominator > 0 ? numerator / denominator : 0;
+}
+
+function hoursBetween(start: Date, end: Date): number {
+  return (end.getTime() - start.getTime()) / (1000 * 60 * 60);
+}
+
+// La dimensión sucursal solo aplica a reservas: InBody, WhatsApp, llamadas y
+// B2B no tienen sucursal en el modelo (el propio documento de referencia lo
+// marca como mejora sugerida, §7 — no existe hoy ni en el Excel original).
+export async function getReporteSemanal(from: Date, to: Date, sucursalId?: string) {
+  const [reservations, whatsappRequests, callLogs, inbodySales, b2bProspects] = await Promise.all([
+    prisma.reservation.findMany({
+      where: {
+        startAt: { gte: from, lt: to },
+        ...(sucursalId ? { consultorio: { sucursalId } } : {}),
+      },
+      select: { status: true, startAt: true, endAt: true, priceApplied: true, inbodyIncluded: true },
+    }),
+    prisma.whatsappRequest.findMany({ where: { date: { gte: from, lt: to } } }),
+    prisma.callLog.findMany({ where: { date: { gte: from, lt: to } } }),
+    prisma.inbodySale.findMany({ where: { date: { gte: from, lt: to } } }),
+    prisma.b2bProspect.findMany({ where: { date: { gte: from, lt: to } } }),
+  ]);
+
+  const realizadas = reservations.filter((r) => r.status === "COMPLETED");
+
+  const flujoPacientes = {
+    citasAgendadas: reservations.length,
+    citasEfectivas: realizadas.length,
+    cancelaciones: reservations.filter((r) => r.status === "CANCELLED").length,
+    pospuestas: reservations.filter((r) => r.status === "POSTPONED").length,
+    horasRentadas: realizadas.reduce((sum, r) => sum + hoursBetween(r.startAt, r.endAt), 0),
+    ingresoRenta: realizadas.reduce((sum, r) => sum + (r.priceApplied ?? 0), 0),
+  };
+
+  const whatsappConcretadas = whatsappRequests.filter((w) => w.confirmed).length;
+  const agendaWhatsapp = {
+    solicitudes: whatsappRequests.length,
+    concretadas: whatsappConcretadas,
+    noConcretadas: whatsappRequests.length - whatsappConcretadas,
+    tasaCierre: safeRatio(whatsappConcretadas, whatsappRequests.length),
+  };
+
+  const contactosNuevos = callLogs.filter((c) => c.isNewContact).length;
+  const citasGeneradas = callLogs.filter((c) => c.generatedAppointment).length;
+  const conversion = {
+    totalLlamadas: callLogs.length,
+    contactosNuevos,
+    citasGeneradas,
+    tasaConversion: safeRatio(citasGeneradas, contactosNuevos),
+  };
+
+  const inbodyEnConsulta = reservations.filter((r) => r.inbodyIncluded).length;
+  const inbodyCorporativo = inbodySales.filter((v) => v.type === "CORPORATE").length;
+  const inbodyPublico = inbodySales.filter((v) => v.type === "PUBLIC").length;
+  const ingresoInbodyExternos = inbodySales.reduce((sum, v) => sum + v.price, 0);
+  const inbody = {
+    enConsulta: inbodyEnConsulta,
+    corporativo: inbodyCorporativo,
+    publico: inbodyPublico,
+    ingresoExternos: ingresoInbodyExternos,
+    total: inbodyEnConsulta + inbodySales.length,
+  };
+
+  const flujoB2b = {
+    interesados: b2bProspects.filter((p) => p.status === "INTERESTED").length,
+    enNegociacion: b2bProspects.filter((p) => p.status === "NEGOTIATING").length,
+    confirmados: b2bProspects.filter((p) => p.status === "CONFIRMED").length,
+    incidenciasAgenda: b2bProspects.filter((p) => p.scheduleIncident).length,
+  };
+
+  return {
+    flujoPacientes,
+    agendaWhatsapp,
+    conversion,
+    inbody,
+    flujoB2b,
+    ingresoTotal: flujoPacientes.ingresoRenta + ingresoInbodyExternos,
+  };
+}
+
+export interface ReportePorEspecialistaRow {
+  specialistId: string;
+  name: string;
+  specialtyNames: string;
+  citasAgendadas: number;
+  realizadas: number;
+  canceladas: number;
+  pospuestas: number;
+  horas: number;
+  ingresoRenta: number;
+  citasWhatsapp: number;
+}
+
+export async function getReportePorEspecialista(from: Date, to: Date): Promise<ReportePorEspecialistaRow[]> {
+  const [specialists, reservations, whatsappRequests] = await Promise.all([
+    prisma.specialist.findMany({
+      include: { specialties: true },
+      orderBy: [{ paternalLastName: "asc" }, { firstName: "asc" }],
+    }),
+    prisma.reservation.findMany({
+      where: { startAt: { gte: from, lt: to } },
+      select: { specialistId: true, status: true, startAt: true, endAt: true, priceApplied: true },
+    }),
+    prisma.whatsappRequest.findMany({
+      where: { date: { gte: from, lt: to }, specialistId: { not: null } },
+      select: { specialistId: true },
+    }),
+  ]);
+
+  return specialists.map((s) => {
+    const own = reservations.filter((r) => r.specialistId === s.id);
+    const realizadas = own.filter((r) => r.status === "COMPLETED");
+
+    return {
+      specialistId: s.id,
+      name: `${s.firstName} ${s.paternalLastName}`,
+      specialtyNames: s.specialties.map((sp) => sp.name).join(", "),
+      citasAgendadas: own.length,
+      realizadas: realizadas.length,
+      canceladas: own.filter((r) => r.status === "CANCELLED").length,
+      pospuestas: own.filter((r) => r.status === "POSTPONED").length,
+      horas: realizadas.reduce((sum, r) => sum + hoursBetween(r.startAt, r.endAt), 0),
+      ingresoRenta: realizadas.reduce((sum, r) => sum + (r.priceApplied ?? 0), 0),
+      citasWhatsapp: whatsappRequests.filter((w) => w.specialistId === s.id).length,
+    };
+  });
 }

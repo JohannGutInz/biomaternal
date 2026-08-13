@@ -8,6 +8,7 @@ import { Modal } from "@/components/ui/Modal";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Textarea } from "@/components/ui/Textarea";
+import { Checkbox } from "@/components/ui/Checkbox";
 import { Button } from "@/components/ui/Button";
 import { crearReservationAction } from "@/lib/actions";
 import { reservationSchema, type ReservationData } from "@/lib/schemas";
@@ -30,11 +31,14 @@ export function ReservationFormModal({
     register,
     handleSubmit,
     reset,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<ReservationData>({
     resolver: zodResolver(reservationSchema),
-    defaultValues: { type: "HOURLY" },
+    defaultValues: { type: "HOURLY", inbodyIncluded: false },
   });
+
+  const type = watch("type");
 
   async function onSubmit(data: ReservationData) {
     setServerError(null);
@@ -85,6 +89,13 @@ export function ReservationFormModal({
           <Input type="datetime-local" label="Inicio" {...register("startAt")} error={errors.startAt?.message} />
           <Input type="datetime-local" label="Fin" {...register("endAt")} error={errors.endAt?.message} />
         </div>
+        {type === "HOURLY" && (
+          <div className="grid grid-cols-2 gap-4">
+            <Input label="Paciente" {...register("patientName")} error={errors.patientName?.message} />
+            <Input label="Teléfono del paciente (opcional)" {...register("patientPhone")} error={errors.patientPhone?.message} />
+          </div>
+        )}
+        <Checkbox label="Incluye InBody en la consulta" {...register("inbodyIncluded")} />
         <Textarea label="Notas (opcional)" rows={3} {...register("notes")} error={errors.notes?.message} />
         {serverError && <p className="text-sm text-rose-600">{serverError}</p>}
       </form>

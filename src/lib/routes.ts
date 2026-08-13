@@ -41,6 +41,21 @@ export const APP_ROUTE = {
     cobros: {
       index: "/app/cobros"
     },
+    inbody: {
+      index: "/app/inbody"
+    },
+    whatsapp: {
+      index: "/app/agenda-whatsapp"
+    },
+    llamadas: {
+      index: "/app/llamadas"
+    },
+    b2b: {
+      index: "/app/prospectos-b2b"
+    },
+    reportes: {
+      index: "/app/reportes"
+    },
   },
   registration: {
     index: "/registro"

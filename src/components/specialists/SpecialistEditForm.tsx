@@ -8,6 +8,7 @@ import { Card, CardHeader } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
 import { Checkbox } from "@/components/ui/Checkbox";
+import { Select } from "@/components/ui/Select";
 import { MultiSelectPicker } from "@/components/ui/MultiSelectPicker";
 import { Button } from "@/components/ui/Button";
 import { SpecialistPhotoUpload, type SpecialistPhotoUploadHandle } from "@/components/specialists/SpecialistPhotoUpload";
@@ -26,9 +27,11 @@ interface Option {
 export function SpecialistEditForm({
   specialist,
   specialties,
+  consultorios,
 }: {
   specialist: SpecialistWithRelations;
   specialties: Option[];
+  consultorios: Option[];
 }) {
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
@@ -54,6 +57,8 @@ export function SpecialistEditForm({
       photoUrl: specialist.photoUrl ?? undefined,
       specialtyIds: specialist.specialties.map((s) => s.id),
       isPublic: specialist.isPublic,
+      active: specialist.active,
+      defaultConsultorioId: specialist.defaultConsultorioId ?? undefined,
     },
   });
 
@@ -118,6 +123,12 @@ export function SpecialistEditForm({
         <div className="grid grid-cols-1 gap-4 px-5 pb-5">
           <Input label="Cédula profesional" {...register("licenseNumber")} error={errors.licenseNumber?.message} />
           <Textarea label="Biografía" rows={4} {...register("bio")} error={errors.bio?.message} />
+          <Select label="Consultorio habitual (opcional)" {...register("defaultConsultorioId")} error={errors.defaultConsultorioId?.message}>
+            <option value="">Sin definir</option>
+            {consultorios.map((c) => (
+              <option key={c.id} value={c.id}>{c.name}</option>
+            ))}
+          </Select>
           <Controller
             name="specialtyIds"
             control={control}
@@ -136,9 +147,13 @@ export function SpecialistEditForm({
       </Card>
 
       <Card>
-        <CardHeader title="Visibilidad" />
-        <div className="px-5 pb-5">
+        <CardHeader title="Visibilidad y estatus" />
+        <div className="space-y-2 px-5 pb-5">
           <Checkbox label="Mostrar este perfil en la landing pública" {...register("isPublic")} />
+          <Checkbox
+            label="Activo (aparece como opción al agendar citas y en el catálogo)"
+            {...register("active")}
+          />
         </div>
       </Card>
 

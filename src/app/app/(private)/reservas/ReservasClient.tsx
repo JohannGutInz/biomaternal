@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/Button";
 import { Select } from "@/components/ui/Select";
 import { Badge, statusTone } from "@/components/ui/Badge";
 import { ReservationFormModal } from "@/components/reservas/ReservationFormModal";
+import { CancelReservationModal } from "@/components/reservas/CancelReservationModal";
+import { CompleteReservationModal } from "@/components/reservas/CompleteReservationModal";
 import { cambiarStatusReservationAction } from "@/lib/actions";
 
 type ReservationRow = {
@@ -14,10 +16,12 @@ type ReservationRow = {
   consultorioName: string;
   sucursalName: string;
   specialistName: string;
+  patientName: string | null;
   type: string;
   startAt: string;
   endAt: string;
   status: string;
+  priceApplied: number | null;
   hasCharge: boolean;
 };
 
@@ -25,8 +29,9 @@ const STATUS_LABEL: Record<string, string> = {
   PENDING: "Pendiente",
   CONFIRMED: "Confirmada",
   CANCELLED: "Cancelada",
-  COMPLETED: "Completada",
+  COMPLETED: "Realizada",
   NO_SHOW: "No se presentó",
+  POSTPONED: "Pospuesta",
 };
 
 function formatDateTime(iso: string) {
@@ -43,6 +48,8 @@ export function ReservasClient({
   specialists: { id: string; name: string }[];
 }) {
   const [creating, setCreating] = useState(false);
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
+  const [completingReservation, setCompletingReservation] = useState<ReservationRow | null>(null);
   const [statusFilter, setStatusFilter] = useState("todos");
   const [, startTransition] = useTransition();
 
@@ -51,7 +58,7 @@ export function ReservasClient({
     [reservations, statusFilter],
   );
 
-  function changeStatus(id: string, status: "CONFIRMED" | "CANCELLED" | "COMPLETED" | "NO_SHOW") {
+  function changeStatus(id: string, status: "CONFIRMED" | "NO_SHOW" | "POSTPONED") {
     startTransition(() => {
       cambiarStatusReservationAction(id, status);
     });
@@ -81,6 +88,7 @@ export function ReservasClient({
           <THead>
             <Th>Consultorio</Th>
             <Th>Especialista</Th>
+            <Th>Paciente</Th>
             <Th>Tipo</Th>
             <Th>Inicio</Th>
             <Th>Fin</Th>
@@ -95,6 +103,7 @@ export function ReservasClient({
                   <span className="block text-xs text-zinc-400">{r.sucursalName}</span>
                 </Td>
                 <Td>{r.specialistName}</Td>
+                <Td>{r.patientName ?? <span className="text-zinc-300">—</span>}</Td>
                 <Td>{r.type === "FULL_DAY" ? "Jornada" : "Por hora"}</Td>
                 <Td>{formatDateTime(r.startAt)}</Td>
                 <Td>{formatDateTime(r.endAt)}</Td>
@@ -109,13 +118,16 @@ export function ReservasClient({
                           Confirmar
                         </button>
                       )}
-                      <button type="button" onClick={() => changeStatus(r.id, "COMPLETED")} className="text-zinc-500 hover:underline">
-                        Completar
+                      <button type="button" onClick={() => setCompletingReservation(r)} className="text-zinc-500 hover:underline">
+                        Realizada
+                      </button>
+                      <button type="button" onClick={() => changeStatus(r.id, "POSTPONED")} className="text-sky-600 hover:underline">
+                        Posponer
                       </button>
                       <button type="button" onClick={() => changeStatus(r.id, "NO_SHOW")} className="text-amber-600 hover:underline">
                         No-show
                       </button>
-                      <button type="button" onClick={() => changeStatus(r.id, "CANCELLED")} className="text-rose-600 hover:underline">
+                      <button type="button" onClick={() => setCancellingId(r.id)} className="text-rose-600 hover:underline">
                         Cancelar
                       </button>
                     </div>
@@ -133,6 +145,13 @@ export function ReservasClient({
       </div>
 
       <ReservationFormModal open={creating} onClose={() => setCreating(false)} consultorios={consultorios} specialists={specialists} />
+      <CancelReservationModal open={cancellingId !== null} onClose={() => setCancellingId(null)} reservationId={cancellingId} />
+      <CompleteReservationModal
+        open={completingReservation !== null}
+        onClose={() => setCompletingReservation(null)}
+        reservationId={completingReservation?.id ?? null}
+        suggestedPrice={completingReservation?.priceApplied}
+      />
     </>
   );
 }

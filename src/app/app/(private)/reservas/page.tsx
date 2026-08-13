@@ -21,16 +21,18 @@ export default async function ReservasPage() {
             consultorioName: r.consultorio.name,
             sucursalName: r.consultorio.sucursal.name,
             specialistName: formatFullName(r.specialist),
+            patientName: r.patientName,
             type: r.type,
             startAt: r.startAt.toISOString(),
             endAt: r.endAt.toISOString(),
             status: r.status,
+            priceApplied: r.priceApplied,
             hasCharge: !!r.charge,
           }))}
           consultorios={consultorios
             .filter((c) => c.isActive)
             .map((c) => ({ id: c.id, name: c.name, sucursalName: c.sucursal.name }))}
-          specialists={specialists.map((s) => ({ id: s.id, name: formatFullName(s) }))}
+          specialists={specialists.filter((s) => s.active).map((s) => ({ id: s.id, name: formatFullName(s) }))}
         />
       </Card>
     </div>

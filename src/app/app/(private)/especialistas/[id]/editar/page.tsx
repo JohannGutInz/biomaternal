@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import { getSpecialist, listSpecialties } from "@/lib/data";
+import { getSpecialist, listSpecialties, listConsultorios } from "@/lib/data";
 import { signPhotoUrl } from "@/lib/storage";
 import { SpecialistEditForm } from "@/components/specialists/SpecialistEditForm";
 import { APP_ROUTE } from "@/lib/routes";
@@ -13,9 +13,10 @@ export default async function SpecialistEditPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [specialist, specialties] = await Promise.all([
+  const [specialist, specialties, consultorios] = await Promise.all([
     getSpecialist(id),
     listSpecialties(),
+    listConsultorios(),
   ]);
 
   if (!specialist) notFound();
@@ -34,7 +35,13 @@ export default async function SpecialistEditPage({
       <h1 className="mb-6 text-2xl font-semibold tracking-tight text-zinc-900">Editar especialista</h1>
 
       <div className="max-w-2xl">
-        <SpecialistEditForm specialist={{ ...specialist, photoUrl }} specialties={specialties} />
+        <SpecialistEditForm
+          specialist={{ ...specialist, photoUrl }}
+          specialties={specialties}
+          consultorios={consultorios
+            .filter((c) => c.isActive)
+            .map((c) => ({ id: c.id, name: `${c.name} · ${c.sucursal.name}` }))}
+        />
       </div>
     </div>
   );
