@@ -1,36 +1,84 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Biomaternal Backoffice
 
-## Getting Started
+Plataforma de gestión para las clínicas Biomaternal: administración de sucursales,
+consultorios, especialistas médicos, reservas y cobros, con un portal público de
+especialistas y un portal propio para que cada especialista gestione su perfil y agenda.
 
-First, run the development server:
+Un solo cliente, sin multi-tenant. Ver `CLAUDE-biomaternal.md` para la lógica de negocio y el
+roadmap por fases completo.
+
+## Stack
+
+Next.js 16 (React 19, App Router) · TypeScript · Tailwind CSS 4 · Prisma 7 (`@prisma/adapter-pg`)
+· PostgreSQL (Supabase) · Vercel · JWT (`jose`) · `react-hook-form` + `zod` · S3 (AWS o
+compatible) para fotos.
+
+## Desarrollo local
+
+### 1. Variables de entorno
+
+Copia `.env.example` a `.env` y completa:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# Supabase — dos connection strings distintas:
+# Transaction pooler (6543), la usa la app en runtime — requiere ?pgbouncer=true
+DATABASE_URL="postgresql://postgres.PROJECT_REF:PASSWORD@aws-0-REGION.pooler.supabase.com:6543/postgres?pgbouncer=true"
+# Session pooler / conexión directa (5432), la usa Prisma solo para migrar
+DIRECT_URL="postgresql://postgres.PROJECT_REF:PASSWORD@aws-0-REGION.pooler.supabase.com:5432/postgres"
+
+# Sesión — genera uno nuevo por entorno, nunca reutilices el de otro despliegue
+SESSION_JWT_SECRET=
+
+# Storage (S3 o compatible) — bucket privado, forcePathStyle
+STORAGE_ACCESS_KEY=
+STORAGE_SECRET_KEY=
+STORAGE_ENDPOINT=https://s3.<region>.amazonaws.com
+STORAGE_PUBLIC_URL=https://s3.<region>.amazonaws.com
+STORAGE_REGION=<region>
+STORAGE_BUCKET=<bucket>
+
+# Opcionales — sin ellos el código cae a un fallback razonable
+RESEND_API_KEY=
+EMAIL_FROM=
+STAFF_EMAIL=
+SITE_URL=http://localhost:3000
+CRON_SECRET=
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Base de datos
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npx prisma migrate deploy   # aplica todas las migraciones
+npx tsx prisma/seed.ts      # especialidades base, 3 sucursales, usuario admin
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 3. Levantar la app
 
-## Learn More
+```bash
+npm install
+npm run dev
+```
 
-To learn more about Next.js, take a look at the following resources:
+Abre [http://localhost:3000](http://localhost:3000).
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Scripts
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+| Script | Qué hace |
+|---|---|
+| `npm run dev` | Servidor de desarrollo |
+| `npm run build` | `prisma generate && next build` |
+| `npm run lint` | ESLint |
+| `npm run vercel-build` | `prisma migrate deploy && prisma generate && next build` — usado en Vercel |
 
-## Deploy on Vercel
+## Estructura
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- `src/app/(public)/` — landing, directorio público de especialistas, registro, contacto
+- `src/app/app/(private)/` — backoffice (staff/admin): especialistas, verificación,
+  sucursales, consultorios, agenda, reservas, cobros, catálogos, configuración
+- `src/app/app/(specialist)/` — portal del especialista (perfil propio)
+- `src/lib/actions.ts` / `data.ts` / `public-data.ts` — única capa que toca la base de datos
+- `src/components/ui/` — primitivos de UI compartidos (incluye `Modal`, único primitivo
+  de diálogo/overlay en todo el proyecto)
+- `prisma/schema.prisma` — modelo de datos
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Ver `AGENTS.md` para convenciones de código y el estado detallado de rutas/modelos.

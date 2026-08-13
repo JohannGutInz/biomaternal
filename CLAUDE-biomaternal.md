@@ -150,26 +150,26 @@ Calculables sobre `Reservation` + `Charge` + `Consultorio` + `Sucursal`:
 
 ## 9. Roadmap por fases
 
-### Fase 0 — Rebranding y limpieza (base)
-1. Renombrar proyecto, cookie de sesión y copys `glamour/models` → `biomaternal`.
-2. Ajustar `UserRole` (`MODEL`→`SPECIALIST`, `USER`→`STAFF`).
-3. Retirar entidades y rutas de agencia: `Package`, `Convocatoria`, `ConvocatoriaVista`, `EventoFoto`; módulos `paquetes`, `convocatorias`, `eventos`, carruseles de clientes.
-4. Migración Prisma inicial + limpiar seed/`mock-data.ts`.
+### Fase 0 — Rebranding y limpieza (base) ✅ completa
+1. ✅ Renombrar proyecto, cookie de sesión y copys `glamour/models` → `biomaternal`.
+2. ✅ Ajustar `UserRole` (`MODEL`→`SPECIALIST`, `USER`→`STAFF`).
+3. ✅ Retirar entidades y rutas de agencia: `Package`, `Convocatoria`, `ConvocatoriaVista`, `EventoFoto`; módulos `paquetes`, `convocatorias`, `eventos`, carruseles de clientes.
+4. ✅ Migración Prisma inicial + limpiar seed/`mock-data.ts`.
 
-### Fase 1 — Dominio de clínicas (núcleo)
-5. Entidades nuevas: `Sucursal`, `Consultorio`, `Specialty`; migraciones.
-6. Módulo **Sucursales** y **Consultorios** (CRUD + fotos S3 + tarifas).
-7. Adaptar `Model` → `Specialist` (atributos profesionales, cédula) y su verificación (`Kyc`).
-8. **Reservas**: entidad `Reservation` + validación de no-solape (constraint + servicio transaccional).
-9. **Agenda/Calendario**: vista de ocupación por consultorio y creación de reservas.
-10. **Portal del especialista**: flujo apartar/rentar consultorio.
-11. **Cobros**: `Charge` ligado a reserva, registro manual y estatus.
+### Fase 1 — Dominio de clínicas (núcleo) ✅ completa
+5. ✅ Entidades nuevas: `Sucursal`, `Consultorio`, `ConsultorioFoto`, `Specialty`; migraciones.
+6. ✅ Módulo **Sucursales** y **Consultorios** (CRUD con modal + tarifas). Fotos de consultorio: entidad lista (`ConsultorioFoto`), falta la UI de carga.
+7. ✅ Adaptar `Model` → `Specialist` (atributos profesionales, cédula, `photoUrl` único) y su verificación (`Kyc`, renombrada a "Verificación" en el backoffice).
+8. ✅ **Reservas**: entidad `Reservation` + no-solape verificado en dos capas — constraint `EXCLUDE USING gist` en BD + chequeo transaccional en `crearReservationAction`, probado con solapes reales rechazados.
+9. ✅ **Agenda**: vista de ocupación agrupada por día, filtrable por sucursal/fecha, con creación de reservas.
+10. ⚠️ **Portal del especialista**: solo edición de perfil propio (foto, bio, especialidades). El flujo de apartar/rentar consultorio desde el portal **no está implementado** — hoy las reservas las crea el staff desde `/app/reservas`. Pendiente si el especialista debe poder auto-reservar.
+11. ✅ **Cobros**: `Charge` ligado a reserva, registro manual y cambio de estatus (pendiente/pagado).
 
 ### Fase 2 — KPIs y pulido
-12. Dashboard con KPIs de ocupación, ingresos y actividad (recharts).
+12. Dashboard con KPIs de ocupación, ingresos y actividad (recharts) — hoy solo conteos simples (especialistas activos, verificaciones pendientes, sucursales, reservas pendientes), sin gráficas ni ocupación %.
 13. Reportes exportables (CSV) por sucursal/periodo.
-14. Landing pública: sucursales + directorio de especialistas públicos + contacto.
-15. Correo transaccional: confirmación/recordatorio de reserva (`resend`).
+14. ✅ (adelantado en Fase 1) Landing pública: sucursales + directorio de especialistas públicos + contacto. Copy de páginas estáticas (`/servicios`, `/historia`, etc.) sigue pendiente de reescritura.
+15. Correo transaccional: confirmación/recordatorio de reserva (`resend`) — el helper de correo existe pero no hay trigger automático en `crearReservationAction` todavía.
 
 ### Fase 3 — Extensiones (fuera de este alcance)
 Pacientes y citas médicas, expediente, facturación CFDI, pagos en línea, roles por sucursal, cumplimiento NOM-024.

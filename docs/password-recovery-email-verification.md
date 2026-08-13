@@ -29,10 +29,9 @@ const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KE
 
 `RESEND_API_KEY` no está configurado ni en `.env` local ni en las variables de
 Vercel (se revisaron ambas). Esto significa que **ahora mismo, en producción,
-tampoco se están mandando de verdad** las notificaciones de KYC
+tampoco se están mandando de verdad** las notificaciones de verificación
 (`emailApplicationReceived`, `emailNewApplicationStaff`, `emailApplicationDecision`),
-el aviso de convocatoria publicada, ni el formulario de contacto — todos caen al
-`console.log` simulado.
+ni el formulario de contacto — todos caen al `console.log` simulado.
 
 ### Qué hace falta para activarlo (no es gasto obligatorio)
 
@@ -40,7 +39,7 @@ el aviso de convocatoria publicada, ni el formulario de contacto — todos caen 
 2. Verificar un dominio propio en Resend (registros DNS tipo SPF/DKIM) — depende de
    tener acceso al DNS del dominio real que se vaya a usar. Sin esto, o no sale el
    correo o cae en spam; hoy el `FROM` está hardcodeado a un dominio de demo
-   (`glamourmodels.demo`).
+   (`biomaternal.demo`).
 3. Agregar `RESEND_API_KEY` y `EMAIL_FROM` a `.env` y a las variables de entorno de
    Vercel (mismo proceso que se usó para `DATABASE_URL`/`STORAGE_*`/`SESSION_JWT_SECRET`).
 
