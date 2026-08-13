@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Modal } from "@/components/ui/Modal";
 import { Input } from "@/components/ui/Input";
@@ -10,6 +10,7 @@ import { Select } from "@/components/ui/Select";
 import { Textarea } from "@/components/ui/Textarea";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { Button } from "@/components/ui/Button";
+import { ClientPicker, type ClientOption } from "@/components/clients/ClientPicker";
 import { crearReservationAction } from "@/lib/actions";
 import { reservationSchema, type ReservationData } from "@/lib/schemas";
 
@@ -18,17 +19,21 @@ export function ReservationFormModal({
   onClose,
   consultorios,
   specialists,
+  clients,
 }: {
   open: boolean;
   onClose: () => void;
   consultorios: { id: string; name: string; sucursalName: string }[];
   specialists: { id: string; name: string }[];
+  clients: ClientOption[];
 }) {
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
+  const [localClients, setLocalClients] = useState(clients);
 
   const {
     register,
+    control,
     handleSubmit,
     reset,
     watch,
@@ -90,10 +95,20 @@ export function ReservationFormModal({
           <Input type="datetime-local" label="Fin" {...register("endAt")} error={errors.endAt?.message} />
         </div>
         {type === "HOURLY" && (
-          <div className="grid grid-cols-2 gap-4">
-            <Input label="Paciente" {...register("patientName")} error={errors.patientName?.message} />
-            <Input label="Teléfono del paciente (opcional)" {...register("patientPhone")} error={errors.patientPhone?.message} />
-          </div>
+          <Controller
+            name="clientId"
+            control={control}
+            render={({ field }) => (
+              <ClientPicker
+                label="Paciente"
+                clients={localClients}
+                value={field.value}
+                onChange={field.onChange}
+                onClientCreated={(c) => setLocalClients((prev) => [...prev, c])}
+                error={errors.clientId?.message}
+              />
+            )}
+          />
         )}
         <Checkbox label="Incluye InBody en la consulta" {...register("inbodyIncluded")} />
         <Textarea label="Notas (opcional)" rows={3} {...register("notes")} error={errors.notes?.message} />

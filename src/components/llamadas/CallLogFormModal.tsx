@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Modal } from "@/components/ui/Modal";
 import { Input } from "@/components/ui/Input";
@@ -10,6 +10,7 @@ import { Select } from "@/components/ui/Select";
 import { Textarea } from "@/components/ui/Textarea";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { Button } from "@/components/ui/Button";
+import { ClientPicker, type ClientOption } from "@/components/clients/ClientPicker";
 import { crearCallLogAction } from "@/lib/actions";
 import { callLogSchema, type CallLogData } from "@/lib/schemas";
 
@@ -17,12 +18,22 @@ function todayInputValue() {
   return new Date().toISOString().slice(0, 10);
 }
 
-export function CallLogFormModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+export function CallLogFormModal({
+  open,
+  onClose,
+  clients,
+}: {
+  open: boolean;
+  onClose: () => void;
+  clients: ClientOption[];
+}) {
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
+  const [localClients, setLocalClients] = useState(clients);
 
   const {
     register,
+    control,
     handleSubmit,
     reset,
     formState: { errors, isSubmitting },
@@ -43,7 +54,7 @@ export function CallLogFormModal({ open, onClose }: { open: boolean; onClose: ()
       direction: "INBOUND",
       isNewContact: false,
       generatedAppointment: false,
-      contactName: "",
+      clientId: "",
       notes: "",
     });
     onClose();
@@ -68,7 +79,20 @@ export function CallLogFormModal({ open, onClose }: { open: boolean; onClose: ()
     >
       <form id="call-log-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <Input type="date" label="Fecha" {...register("date")} error={errors.date?.message} />
-        <Input label="Nombre del contacto" {...register("contactName")} error={errors.contactName?.message} />
+        <Controller
+          name="clientId"
+          control={control}
+          render={({ field }) => (
+            <ClientPicker
+              label="Contacto"
+              clients={localClients}
+              value={field.value}
+              onChange={field.onChange}
+              onClientCreated={(c) => setLocalClients((prev) => [...prev, c])}
+              error={errors.clientId?.message}
+            />
+          )}
+        />
         <Select label="Tipo de llamada" {...register("direction")} error={errors.direction?.message}>
           <option value="INBOUND">Entrante</option>
           <option value="OUTBOUND">Saliente</option>

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Modal } from "@/components/ui/Modal";
 import { Input } from "@/components/ui/Input";
@@ -10,6 +10,7 @@ import { Select } from "@/components/ui/Select";
 import { Textarea } from "@/components/ui/Textarea";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { Button } from "@/components/ui/Button";
+import { ClientPicker, type ClientOption } from "@/components/clients/ClientPicker";
 import { crearWhatsappRequestAction } from "@/lib/actions";
 import { whatsappRequestSchema, type WhatsappRequestData } from "@/lib/schemas";
 
@@ -21,16 +22,20 @@ export function WhatsappRequestFormModal({
   open,
   onClose,
   specialists,
+  clients,
 }: {
   open: boolean;
   onClose: () => void;
   specialists: { id: string; name: string }[];
+  clients: ClientOption[];
 }) {
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
+  const [localClients, setLocalClients] = useState(clients);
 
   const {
     register,
+    control,
     handleSubmit,
     reset,
     watch,
@@ -49,7 +54,7 @@ export function WhatsappRequestFormModal({
       setServerError(result.message);
       return;
     }
-    reset({ date: todayInputValue(), confirmed: true, contact: "", specialistId: "", declineReason: "", notes: "" });
+    reset({ date: todayInputValue(), confirmed: true, clientId: "", specialistId: "", declineReason: "", notes: "" });
     onClose();
     router.refresh();
   }
@@ -72,7 +77,20 @@ export function WhatsappRequestFormModal({
     >
       <form id="whatsapp-request-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <Input type="date" label="Fecha" {...register("date")} error={errors.date?.message} />
-        <Input label="Nombre / teléfono del contacto" {...register("contact")} error={errors.contact?.message} />
+        <Controller
+          name="clientId"
+          control={control}
+          render={({ field }) => (
+            <ClientPicker
+              label="Contacto"
+              clients={localClients}
+              value={field.value}
+              onChange={field.onChange}
+              onClientCreated={(c) => setLocalClients((prev) => [...prev, c])}
+              error={errors.clientId?.message}
+            />
+          )}
+        />
         <Select label="Especialista solicitado (opcional)" {...register("specialistId")} error={errors.specialistId?.message}>
           <option value="">Sin especificar</option>
           {specialists.map((s) => (

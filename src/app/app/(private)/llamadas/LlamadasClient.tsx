@@ -2,15 +2,19 @@
 
 import { useState } from "react";
 import { Plus } from "lucide-react";
+import Link from "next/link";
 import { Table, THead, Th, Tr, Td } from "@/components/ui/Table";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { CallLogFormModal } from "@/components/llamadas/CallLogFormModal";
+import type { ClientOption } from "@/components/clients/ClientPicker";
+import { APP_ROUTE } from "@/lib/routes";
 
 type CallRow = {
   id: string;
   date: string;
-  contactName: string;
+  clientId: string;
+  clientName: string;
   direction: string;
   isNewContact: boolean;
   generatedAppointment: boolean;
@@ -23,7 +27,7 @@ function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("es-MX", { day: "2-digit", month: "short", year: "numeric", timeZone: "UTC" });
 }
 
-export function LlamadasClient({ calls }: { calls: CallRow[] }) {
+export function LlamadasClient({ calls, clients }: { calls: CallRow[]; clients: ClientOption[] }) {
   const [creating, setCreating] = useState(false);
 
   const contactosNuevos = calls.filter((c) => c.isNewContact).length;
@@ -54,7 +58,11 @@ export function LlamadasClient({ calls }: { calls: CallRow[] }) {
             {calls.map((c) => (
               <Tr key={c.id}>
                 <Td>{formatDate(c.date)}</Td>
-                <Td className="font-medium text-zinc-900">{c.contactName}</Td>
+                <Td className="font-medium text-zinc-900">
+                  <Link href={APP_ROUTE.app.clientes.detail(c.clientId)} className="text-brand-700 hover:underline">
+                    {c.clientName}
+                  </Link>
+                </Td>
                 <Td>{DIRECTION_LABEL[c.direction] ?? c.direction}</Td>
                 <Td>
                   <Badge tone={c.isNewContact ? "success" : "neutral"}>{c.isNewContact ? "Sí" : "No"}</Badge>
@@ -73,7 +81,7 @@ export function LlamadasClient({ calls }: { calls: CallRow[] }) {
         </Table>
       </div>
 
-      <CallLogFormModal open={creating} onClose={() => setCreating(false)} />
+      <CallLogFormModal open={creating} onClose={() => setCreating(false)} clients={clients} />
     </>
   );
 }

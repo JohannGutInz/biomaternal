@@ -1,4 +1,4 @@
-import { getCurrentUser, getOwnSpecialist, listOwnReservations, listConsultorios } from "@/lib/data";
+import { getCurrentUser, getOwnSpecialist, listOwnReservations, listConsultorios, listClients } from "@/lib/data";
 import { notFound } from "next/navigation";
 import { AgendaEspecialistaClient } from "./AgendaEspecialistaClient";
 
@@ -7,9 +7,10 @@ export default async function EspecialistaAgendaPage() {
   const specialist = await getOwnSpecialist(user.id);
   if (!specialist) notFound();
 
-  const [reservations, consultorios] = await Promise.all([
+  const [reservations, consultorios, clients] = await Promise.all([
     listOwnReservations(specialist.id),
     listConsultorios(),
+    listClients(),
   ]);
 
   const canReserve = specialist.kyc.status === "APPROVED";
@@ -28,6 +29,7 @@ export default async function EspecialistaAgendaPage() {
           id: r.id,
           consultorioName: r.consultorio.name,
           sucursalName: r.consultorio.sucursal.name,
+          clientName: r.client?.name ?? null,
           type: r.type,
           startAt: r.startAt.toISOString(),
           endAt: r.endAt.toISOString(),
@@ -38,6 +40,7 @@ export default async function EspecialistaAgendaPage() {
         consultorios={consultorios
           .filter((c) => c.isActive)
           .map((c) => ({ id: c.id, name: c.name, sucursalName: c.sucursal.name }))}
+        clients={clients.map((c) => ({ id: c.id, name: c.name, phone: c.phone }))}
       />
     </div>
   );

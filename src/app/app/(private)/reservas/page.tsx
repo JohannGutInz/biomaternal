@@ -1,14 +1,15 @@
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Card } from "@/components/ui/Card";
-import { listReservations, listConsultorios, listSpecialists } from "@/lib/data";
+import { listReservations, listConsultorios, listSpecialists, listClients } from "@/lib/data";
 import { formatFullName } from "@/lib/utils";
 import { ReservasClient } from "./ReservasClient";
 
 export default async function ReservasPage() {
-  const [reservations, consultorios, specialists] = await Promise.all([
+  const [reservations, consultorios, specialists, clients] = await Promise.all([
     listReservations(),
     listConsultorios(),
     listSpecialists(),
+    listClients(),
   ]);
 
   return (
@@ -21,7 +22,8 @@ export default async function ReservasPage() {
             consultorioName: r.consultorio.name,
             sucursalName: r.consultorio.sucursal.name,
             specialistName: formatFullName(r.specialist),
-            patientName: r.patientName,
+            clientId: r.clientId,
+            clientName: r.client?.name ?? null,
             type: r.type,
             startAt: r.startAt.toISOString(),
             endAt: r.endAt.toISOString(),
@@ -33,6 +35,7 @@ export default async function ReservasPage() {
             .filter((c) => c.isActive)
             .map((c) => ({ id: c.id, name: c.name, sucursalName: c.sucursal.name }))}
           specialists={specialists.filter((s) => s.active).map((s) => ({ id: s.id, name: formatFullName(s) }))}
+          clients={clients.map((c) => ({ id: c.id, name: c.name, phone: c.phone }))}
         />
       </Card>
     </div>

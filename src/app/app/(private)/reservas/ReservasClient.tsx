@@ -2,6 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { Plus } from "lucide-react";
+import Link from "next/link";
 import { Table, THead, Th, Tr, Td } from "@/components/ui/Table";
 import { Button } from "@/components/ui/Button";
 import { Select } from "@/components/ui/Select";
@@ -9,14 +10,17 @@ import { Badge, statusTone } from "@/components/ui/Badge";
 import { ReservationFormModal } from "@/components/reservas/ReservationFormModal";
 import { CancelReservationModal } from "@/components/reservas/CancelReservationModal";
 import { CompleteReservationModal } from "@/components/reservas/CompleteReservationModal";
+import type { ClientOption } from "@/components/clients/ClientPicker";
 import { cambiarStatusReservationAction } from "@/lib/actions";
+import { APP_ROUTE } from "@/lib/routes";
 
 type ReservationRow = {
   id: string;
   consultorioName: string;
   sucursalName: string;
   specialistName: string;
-  patientName: string | null;
+  clientId: string | null;
+  clientName: string | null;
   type: string;
   startAt: string;
   endAt: string;
@@ -42,10 +46,12 @@ export function ReservasClient({
   reservations,
   consultorios,
   specialists,
+  clients,
 }: {
   reservations: ReservationRow[];
   consultorios: { id: string; name: string; sucursalName: string }[];
   specialists: { id: string; name: string }[];
+  clients: ClientOption[];
 }) {
   const [creating, setCreating] = useState(false);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
@@ -103,7 +109,15 @@ export function ReservasClient({
                   <span className="block text-xs text-zinc-400">{r.sucursalName}</span>
                 </Td>
                 <Td>{r.specialistName}</Td>
-                <Td>{r.patientName ?? <span className="text-zinc-300">—</span>}</Td>
+                <Td>
+                  {r.clientId && r.clientName ? (
+                    <Link href={APP_ROUTE.app.clientes.detail(r.clientId)} className="text-brand-700 hover:underline">
+                      {r.clientName}
+                    </Link>
+                  ) : (
+                    <span className="text-zinc-300">—</span>
+                  )}
+                </Td>
                 <Td>{r.type === "FULL_DAY" ? "Jornada" : "Por hora"}</Td>
                 <Td>{formatDateTime(r.startAt)}</Td>
                 <Td>{formatDateTime(r.endAt)}</Td>
@@ -144,7 +158,13 @@ export function ReservasClient({
         </Table>
       </div>
 
-      <ReservationFormModal open={creating} onClose={() => setCreating(false)} consultorios={consultorios} specialists={specialists} />
+      <ReservationFormModal
+        open={creating}
+        onClose={() => setCreating(false)}
+        consultorios={consultorios}
+        specialists={specialists}
+        clients={clients}
+      />
       <CancelReservationModal open={cancellingId !== null} onClose={() => setCancellingId(null)} reservationId={cancellingId} />
       <CompleteReservationModal
         open={completingReservation !== null}

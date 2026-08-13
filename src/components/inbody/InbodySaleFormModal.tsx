@@ -2,13 +2,14 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Modal } from "@/components/ui/Modal";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Textarea } from "@/components/ui/Textarea";
 import { Button } from "@/components/ui/Button";
+import { ClientPicker, type ClientOption } from "@/components/clients/ClientPicker";
 import { crearInbodySaleAction } from "@/lib/actions";
 import { inbodySaleSchema, type InbodySaleData } from "@/lib/schemas";
 
@@ -16,12 +17,22 @@ function todayInputValue() {
   return new Date().toISOString().slice(0, 10);
 }
 
-export function InbodySaleFormModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+export function InbodySaleFormModal({
+  open,
+  onClose,
+  clients,
+}: {
+  open: boolean;
+  onClose: () => void;
+  clients: ClientOption[];
+}) {
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
+  const [localClients, setLocalClients] = useState(clients);
 
   const {
     register,
+    control,
     handleSubmit,
     reset,
     formState: { errors, isSubmitting },
@@ -37,7 +48,7 @@ export function InbodySaleFormModal({ open, onClose }: { open: boolean; onClose:
       setServerError(result.message);
       return;
     }
-    reset({ date: todayInputValue(), type: "PUBLIC", clientName: "", clientPhone: "", price: undefined, notes: "" });
+    reset({ date: todayInputValue(), type: "PUBLIC", clientId: "", price: undefined, notes: "" });
     onClose();
     router.refresh();
   }
@@ -60,8 +71,20 @@ export function InbodySaleFormModal({ open, onClose }: { open: boolean; onClose:
     >
       <form id="inbody-sale-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <Input type="date" label="Fecha" {...register("date")} error={errors.date?.message} />
-        <Input label="Cliente" {...register("clientName")} error={errors.clientName?.message} />
-        <Input label="Teléfono (opcional)" {...register("clientPhone")} error={errors.clientPhone?.message} />
+        <Controller
+          name="clientId"
+          control={control}
+          render={({ field }) => (
+            <ClientPicker
+              label="Cliente"
+              clients={localClients}
+              value={field.value}
+              onChange={field.onChange}
+              onClientCreated={(c) => setLocalClients((prev) => [...prev, c])}
+              error={errors.clientId?.message}
+            />
+          )}
+        />
         <Select label="Tipo" {...register("type")} error={errors.type?.message}>
           <option value="PUBLIC">Público</option>
           <option value="CORPORATE">Corporativo</option>

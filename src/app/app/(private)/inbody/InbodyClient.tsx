@@ -2,15 +2,19 @@
 
 import { useState } from "react";
 import { Plus } from "lucide-react";
+import Link from "next/link";
 import { Table, THead, Th, Tr, Td } from "@/components/ui/Table";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { InbodySaleFormModal } from "@/components/inbody/InbodySaleFormModal";
+import type { ClientOption } from "@/components/clients/ClientPicker";
 import { formatCurrency } from "@/lib/utils";
+import { APP_ROUTE } from "@/lib/routes";
 
 type SaleRow = {
   id: string;
   date: string;
+  clientId: string;
   clientName: string;
   clientPhone: string | null;
   type: string;
@@ -24,7 +28,7 @@ function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("es-MX", { day: "2-digit", month: "short", year: "numeric", timeZone: "UTC" });
 }
 
-export function InbodyClient({ sales }: { sales: SaleRow[] }) {
+export function InbodyClient({ sales, clients }: { sales: SaleRow[]; clients: ClientOption[] }) {
   const [creating, setCreating] = useState(false);
 
   return (
@@ -50,7 +54,9 @@ export function InbodyClient({ sales }: { sales: SaleRow[] }) {
               <Tr key={s.id}>
                 <Td>{formatDate(s.date)}</Td>
                 <Td className="font-medium text-zinc-900">
-                  {s.clientName}
+                  <Link href={APP_ROUTE.app.clientes.detail(s.clientId)} className="text-brand-700 hover:underline">
+                    {s.clientName}
+                  </Link>
                   {s.clientPhone && <span className="block text-xs text-zinc-400">{s.clientPhone}</span>}
                 </Td>
                 <Td>
@@ -69,7 +75,7 @@ export function InbodyClient({ sales }: { sales: SaleRow[] }) {
         </Table>
       </div>
 
-      <InbodySaleFormModal open={creating} onClose={() => setCreating(false)} />
+      <InbodySaleFormModal open={creating} onClose={() => setCreating(false)} clients={clients} />
     </>
   );
 }

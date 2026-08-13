@@ -5,6 +5,7 @@ import {
   CalendarDays,
   CircleDollarSign,
   ClipboardCheck,
+  Contact,
   DoorOpen,
   Handshake,
   List,
@@ -49,6 +50,7 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     label: "Recepción",
     items: [
+      { label: "Clientes", href: APP_ROUTE.app.clientes.index, icon: Contact },
       { label: "Ventas InBody", href: APP_ROUTE.app.inbody.index, icon: Activity },
       { label: "Agenda WhatsApp", href: APP_ROUTE.app.whatsapp.index, icon: MessageCircle },
       { label: "Llamadas", href: APP_ROUTE.app.llamadas.index, icon: Phone },

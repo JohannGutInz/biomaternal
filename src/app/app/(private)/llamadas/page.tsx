@@ -1,10 +1,10 @@
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Card } from "@/components/ui/Card";
-import { listCallLogs } from "@/lib/data";
+import { listCallLogs, listClients } from "@/lib/data";
 import { LlamadasClient } from "./LlamadasClient";
 
 export default async function LlamadasPage() {
-  const calls = await listCallLogs();
+  const [calls, clients] = await Promise.all([listCallLogs(), listClients()]);
 
   return (
     <div>
@@ -14,12 +14,14 @@ export default async function LlamadasPage() {
           calls={calls.map((c) => ({
             id: c.id,
             date: c.date.toISOString(),
-            contactName: c.contactName,
+            clientId: c.clientId,
+            clientName: c.client.name,
             direction: c.direction,
             isNewContact: c.isNewContact,
             generatedAppointment: c.generatedAppointment,
             notes: c.notes,
           }))}
+          clients={clients.map((c) => ({ id: c.id, name: c.name, phone: c.phone }))}
         />
       </Card>
     </div>

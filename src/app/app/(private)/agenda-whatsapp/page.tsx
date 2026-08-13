@@ -1,11 +1,15 @@
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Card } from "@/components/ui/Card";
-import { listWhatsappRequests, listSpecialists } from "@/lib/data";
+import { listWhatsappRequests, listSpecialists, listClients } from "@/lib/data";
 import { formatFullName } from "@/lib/utils";
 import { WhatsappClient } from "./WhatsappClient";
 
 export default async function AgendaWhatsappPage() {
-  const [requests, specialists] = await Promise.all([listWhatsappRequests(), listSpecialists()]);
+  const [requests, specialists, clients] = await Promise.all([
+    listWhatsappRequests(),
+    listSpecialists(),
+    listClients(),
+  ]);
 
   return (
     <div>
@@ -15,13 +19,15 @@ export default async function AgendaWhatsappPage() {
           requests={requests.map((r) => ({
             id: r.id,
             date: r.date.toISOString(),
-            contact: r.contact,
+            clientId: r.clientId,
+            clientName: r.client.name,
             specialistName: r.specialist ? formatFullName(r.specialist) : null,
             confirmed: r.confirmed,
             declineReason: r.declineReason,
             notes: r.notes,
           }))}
           specialists={specialists.filter((s) => s.active).map((s) => ({ id: s.id, name: formatFullName(s) }))}
+          clients={clients.map((c) => ({ id: c.id, name: c.name, phone: c.phone }))}
         />
       </Card>
     </div>

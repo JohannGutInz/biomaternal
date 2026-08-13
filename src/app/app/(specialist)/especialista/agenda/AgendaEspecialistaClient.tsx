@@ -6,12 +6,14 @@ import { Button } from "@/components/ui/Button";
 import { Badge, statusTone } from "@/components/ui/Badge";
 import { Card, CardHeader } from "@/components/ui/Card";
 import { ReservationSelfFormModal } from "@/components/specialists/ReservationSelfFormModal";
+import type { ClientOption } from "@/components/clients/ClientPicker";
 import { formatCurrency } from "@/lib/utils";
 
 type ReservationRow = {
   id: string;
   consultorioName: string;
   sucursalName: string;
+  clientName: string | null;
   type: string;
   startAt: string;
   endAt: string;
@@ -24,8 +26,9 @@ const STATUS_LABEL: Record<string, string> = {
   PENDING: "Pendiente",
   CONFIRMED: "Confirmada",
   CANCELLED: "Cancelada",
-  COMPLETED: "Completada",
+  COMPLETED: "Realizada",
   NO_SHOW: "No se presentó",
+  POSTPONED: "Pospuesta",
 };
 
 const CHARGE_LABEL: Record<string, string> = {
@@ -42,10 +45,12 @@ export function AgendaEspecialistaClient({
   canReserve,
   reservations,
   consultorios,
+  clients,
 }: {
   canReserve: boolean;
   reservations: ReservationRow[];
   consultorios: { id: string; name: string; sucursalName: string }[];
+  clients: ClientOption[];
 }) {
   const [creating, setCreating] = useState(false);
 
@@ -72,6 +77,7 @@ export function AgendaEspecialistaClient({
                   <p className="mt-1 text-xs text-zinc-500">
                     {formatDateTime(r.startAt)} – {formatDateTime(r.endAt)} · {r.type === "FULL_DAY" ? "Jornada" : "Por hora"}
                   </p>
+                  {r.clientName && <p className="mt-1 text-xs text-zinc-500">Paciente: {r.clientName}</p>}
                 </div>
                 <div className="flex shrink-0 flex-col items-end gap-1.5">
                   <Badge tone={statusTone(r.status)}>{STATUS_LABEL[r.status] ?? r.status}</Badge>
@@ -88,7 +94,7 @@ export function AgendaEspecialistaClient({
         )}
       </Card>
 
-      <ReservationSelfFormModal open={creating} onClose={() => setCreating(false)} consultorios={consultorios} />
+      <ReservationSelfFormModal open={creating} onClose={() => setCreating(false)} consultorios={consultorios} clients={clients} />
     </>
   );
 }
