@@ -21,6 +21,18 @@ const remotePattern = eventoFotosRemotePattern();
 
 const nextConfig: NextConfig = {
   devIndicators: false,
+  // TEMPORAL: manda la raíz directo al login para que el equipo de pruebas
+  // entre al backoffice sin pasar por la landing pública. Quitar este bloque
+  // (o borrar el archivo) para que "/" vuelva a servir la landing.
+  async redirects() {
+    return [
+      {
+        source: "/",
+        destination: "/app/login",
+        permanent: false,
+      },
+    ];
+  },
   experimental: {
     serverActions: {
       allowedOrigins: ["localhost:3000", "*.app.github.dev"],
