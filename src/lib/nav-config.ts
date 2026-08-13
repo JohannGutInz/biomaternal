@@ -1,10 +1,15 @@
 import {
+  Activity,
+  BarChart3,
   Building2,
   CalendarDays,
   CircleDollarSign,
   ClipboardCheck,
   DoorOpen,
+  Handshake,
   List,
+  MessageCircle,
+  Phone,
   ShieldCheck,
   UsersRound,
   type LucideIcon,
@@ -38,6 +43,16 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Agenda", href: APP_ROUTE.app.agenda.index, icon: CalendarDays },
       { label: "Reservas", href: APP_ROUTE.app.reservas.index, icon: ClipboardCheck },
       { label: "Cobros", href: APP_ROUTE.app.cobros.index, icon: CircleDollarSign },
+      { label: "Reportes", href: APP_ROUTE.app.reportes.index, icon: BarChart3 },
+    ],
+  },
+  {
+    label: "Recepción",
+    items: [
+      { label: "Ventas InBody", href: APP_ROUTE.app.inbody.index, icon: Activity },
+      { label: "Agenda WhatsApp", href: APP_ROUTE.app.whatsapp.index, icon: MessageCircle },
+      { label: "Llamadas", href: APP_ROUTE.app.llamadas.index, icon: Phone },
+      { label: "Prospectos B2B", href: APP_ROUTE.app.b2b.index, icon: Handshake },
     ],
   },
   {
