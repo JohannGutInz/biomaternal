@@ -162,11 +162,11 @@ Calculables sobre `Reservation` + `Charge` + `Consultorio` + `Sucursal`:
 7. ✅ Adaptar `Model` → `Specialist` (atributos profesionales, cédula, `photoUrl` único) y su verificación (`Kyc`, renombrada a "Verificación" en el backoffice).
 8. ✅ **Reservas**: entidad `Reservation` + no-solape verificado en dos capas — constraint `EXCLUDE USING gist` en BD + chequeo transaccional en `crearReservationAction`, probado con solapes reales rechazados.
 9. ✅ **Agenda**: vista de ocupación agrupada por día, filtrable por sucursal/fecha, con creación de reservas.
-10. ⚠️ **Portal del especialista**: solo edición de perfil propio (foto, bio, especialidades). El flujo de apartar/rentar consultorio desde el portal **no está implementado** — hoy las reservas las crea el staff desde `/app/reservas`. Pendiente si el especialista debe poder auto-reservar.
+10. ✅ **Portal del especialista**: edición de perfil propio (foto, bio, especialidades) + auto-reserva (`/app/especialista/agenda`, `crearReservationEspecialistaAction`), bloqueada hasta que el KYC esté aprobado. Usa el mismo chequeo de no-solape en dos capas que las reservas creadas por staff.
 11. ✅ **Cobros**: `Charge` ligado a reserva, registro manual y cambio de estatus (pendiente/pagado).
 
 ### Fase 2 — KPIs y pulido
-12. Dashboard con KPIs de ocupación, ingresos y actividad (recharts) — hoy solo conteos simples (especialistas activos, verificaciones pendientes, sucursales, reservas pendientes), sin gráficas ni ocupación %.
+12. ✅ Dashboard con KPIs de ocupación (%, últimos 7 días por sucursal), ingresos (cobrado vs. pendiente) y especialistas más activos (últimos 30 días), con recharts (`getDashboardKpis` en `lib/data.ts`).
 13. Reportes exportables (CSV) por sucursal/periodo.
 14. ✅ (adelantado en Fase 1) Landing pública: sucursales + directorio de especialistas públicos + contacto. Copy de páginas estáticas (`/servicios`, `/historia`, etc.) sigue pendiente de reescritura.
 15. Correo transaccional: confirmación/recordatorio de reserva (`resend`) — el helper de correo existe pero no hay trigger automático en `crearReservationAction` todavía.
