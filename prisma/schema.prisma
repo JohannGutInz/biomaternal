@@ -209,11 +209,12 @@ model Reservation {
   createdBy    String?           @map("created_by")
   createdAt    DateTime          @default(now()) @map("created_at")
 
-  // Datos de la cita con paciente — opcionales a nivel de esquema porque una
-  // reserva FULL_DAY (jornada completa) no corresponde a un solo paciente;
-  // la UI los exige cuando type = HOURLY (ver reservationSchema en schemas.ts).
-  patientName        String? @map("patient_name")
-  patientPhone       String? @map("patient_phone")
+  // Cliente/paciente de la cita — opcional a nivel de esquema porque una
+  // reserva FULL_DAY (jornada completa) no corresponde a un solo cliente;
+  // la UI lo exige cuando type = HOURLY (ver reservationSchema en schemas.ts).
+  clientId String? @map("client_id")
+  client   Client? @relation(fields: [clientId], references: [id])
+
   cancellationReason String? @map("cancellation_reason")
   inbodyIncluded     Boolean @default(false) @map("inbody_included")
 
@@ -228,6 +229,7 @@ model Reservation {
 
   @@index([consultorioId])
   @@index([specialistId])
+  @@index([clientId])
   @@map("reservations")
 }
 
@@ -273,16 +275,18 @@ enum InbodyClientType {
 // Venta de InBody fuera de consulta (no ocupa consultorio). El InBody hecho
 // durante una consulta se marca con Reservation.inbodyIncluded, no aquí.
 model InbodySale {
-  id          String           @id @default(uuid())
-  date        DateTime         @db.Date
-  clientName  String           @map("client_name")
-  clientPhone String?          @map("client_phone")
-  type        InbodyClientType
-  price       Int
-  notes       String?
-  createdBy   String?          @map("created_by")
-  createdAt   DateTime         @default(now()) @map("created_at")
+  id        String           @id @default(uuid())
+  date      DateTime         @db.Date
+  type      InbodyClientType
+  price     Int
+  notes     String?
+  createdBy String?          @map("created_by")
+  createdAt DateTime         @default(now()) @map("created_at")
 
+  clientId String @map("client_id")
+  client   Client @relation(fields: [clientId], references: [id])
+
+  @@index([clientId])
   @@map("inbody_sales")
 }
 
@@ -290,12 +294,14 @@ model InbodySale {
 model WhatsappRequest {
   id            String   @id @default(uuid())
   date          DateTime @db.Date
-  contact       String
   confirmed     Boolean  @map("confirmed")
   declineReason String?  @map("decline_reason")
   notes         String?
   createdBy     String?  @map("created_by")
   createdAt     DateTime @default(now()) @map("created_at")
+
+  clientId String @map("client_id")
+  client   Client @relation(fields: [clientId], references: [id])
 
   specialistId String?     @map("specialist_id")
   specialist   Specialist? @relation(fields: [specialistId], references: [id])
@@ -305,6 +311,7 @@ model WhatsappRequest {
   reservationId String?      @unique @map("reservation_id")
   reservation   Reservation? @relation(fields: [reservationId], references: [id])
 
+  @@index([clientId])
   @@map("whatsapp_requests")
 }
 
@@ -316,7 +323,6 @@ enum CallDirection {
 model CallLog {
   id                   String        @id @default(uuid())
   date                 DateTime      @db.Date
-  contactName          String        @map("contact_name")
   direction            CallDirection
   isNewContact         Boolean       @map("is_new_contact")
   generatedAppointment Boolean       @map("generated_appointment")
@@ -324,7 +330,30 @@ model CallLog {
   createdBy            String?       @map("created_by")
   createdAt            DateTime      @default(now()) @map("created_at")
 
+  clientId String @map("client_id")
+  client   Client @relation(fields: [clientId], references: [id])
+
+  @@index([clientId])
   @@map("call_logs")
+}
+
+// Cliente/paciente — entidad normalizada compartida por citas, ventas InBody,
+// solicitudes de WhatsApp y llamadas. `name` es texto libre a propósito (el
+// Excel de origen a veces registra más de una persona en un mismo campo,
+// ej. "ERICK MONTOYA Y CELIDA GASTELUM" — no se fuerza a dividir nombre).
+model Client {
+  id        String   @id @default(uuid())
+  name      String
+  phone     String?
+  notes     String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  reservations     Reservation[]
+  inbodySales      InbodySale[]
+  whatsappRequests WhatsappRequest[]
+  callLogs         CallLog[]
+
+  @@map("clients")
 }
 
 enum B2bStatus {
