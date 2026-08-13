@@ -3,6 +3,7 @@
 import { cookies } from "next/headers";
 import { redirect, unauthorized, forbidden } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { randomBytes } from "crypto";
 import * as bcrypt from "bcrypt";
 import { prisma } from "@/db";
 import { siteSettings, registrationApplications } from "./mock-data";
@@ -14,6 +15,7 @@ import {
   ownSpecialistProfileSchema,
   specialistEditSchema,
   registrationActionSchema,
+  nuevoEspecialistaAdminFormSchema,
   sucursalSchema,
   consultorioSchema,
   reservationSchema,
@@ -31,6 +33,7 @@ import type {
   RegistrationActionData,
   OwnSpecialistProfileData,
   SpecialistEditData,
+  NuevoEspecialistaAdminFormData,
   SucursalData,
   ConsultorioData,
   ReservationData,
@@ -456,11 +459,68 @@ export async function toggleSpecialistVisibilityAction(specialistId: string, isP
 }
 
 export async function crearEspecialistaAdminAction(
-  _data: unknown,
+  data: NuevoEspecialistaAdminFormData,
 ): Promise<ActionState & { specialistId?: string }> {
   await requireAdmin();
 
-  return { status: "error", message: "Not implemented" };
+  const parsed = nuevoEspecialistaAdminFormSchema.safeParse(data);
+  if (!parsed.success) {
+    const fields = parsed.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join(", ");
+    return { status: "error", message: `Datos inválidos: ${fields}` };
+  }
+  const d = parsed.data;
+
+  const existing = await prisma.user.findUnique({ where: { email: d.email } });
+  if (existing) {
+    return { status: "error", message: "Ya existe un usuario con ese correo electrónico." };
+  }
+
+  // El alta la hace el staff directamente (no pasa por el flujo de
+  // auto-registro), así que la verificación queda aprobada de una vez y el
+  // especialista aparece de inmediato en /app/especialistas.
+  const tempPassword = randomBytes(9).toString("base64url");
+  const hashedPassword = await hashPassword(tempPassword);
+  const photoKey = await toPhotoKey(d.photoUrl);
+
+  const specialist = await prisma.$transaction(async (tx) => {
+    const user = await tx.user.create({
+      data: {
+        email: d.email,
+        username: `${d.firstName} ${d.paternalLastName}`,
+        hashedPassword,
+        role: UserRole.SPECIALIST,
+      },
+    });
+    const kyc = await tx.kyc.create({ data: { status: "APPROVED", reviewedAt: new Date() } });
+    return tx.specialist.create({
+      data: {
+        firstName: d.firstName,
+        paternalLastName: d.paternalLastName,
+        maternalLastName: d.maternalLastName || null,
+        email: d.email,
+        phone: d.phone,
+        birthDate: new Date(d.birthDate),
+        genre: d.gender,
+        licenseNumber: d.licenseNumber || null,
+        bio: d.bio || null,
+        location: d.location || null,
+        photoUrl: photoKey,
+        kycId: kyc.id,
+        userId: user.id,
+        specialties: { connect: d.specialtyIds.map((id) => ({ id })) },
+      },
+    });
+  });
+
+  revalidatePath(APP_ROUTE.app.specialists.index);
+  revalidatePath(APP_ROUTE.app.verification.index);
+  revalidatePath("/app/dashboard");
+
+  return {
+    status: "success",
+    message: `Especialista creado. Contraseña temporal para su acceso al portal: ${tempPassword}`,
+    specialistId: specialist.id,
+  };
 }
 
 // ---------- Sucursales ----------
