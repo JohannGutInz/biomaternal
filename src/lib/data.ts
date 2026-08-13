@@ -159,6 +159,7 @@ export async function getConsultorio(id: string) {
 const reservationInclude = {
   consultorio: { include: { sucursal: true } },
   specialist: true,
+  client: true,
   charge: true,
 } as const;
 
@@ -179,7 +180,7 @@ export async function getReservation(id: string) {
 export async function listOwnReservations(specialistId: string) {
   return prisma.reservation.findMany({
     where: { specialistId },
-    include: { consultorio: { include: { sucursal: true } }, charge: true },
+    include: { consultorio: { include: { sucursal: true } }, client: true, charge: true },
     orderBy: { startAt: "desc" },
   });
 }
@@ -202,14 +203,14 @@ export async function listReservationsInRange(from: Date, to: Date, sucursalId?:
 // ---------- Ventas InBody ----------
 
 export async function listInbodySales() {
-  return prisma.inbodySale.findMany({ orderBy: { date: "desc" } });
+  return prisma.inbodySale.findMany({ include: { client: true }, orderBy: { date: "desc" } });
 }
 
 // ---------- Agenda WhatsApp ----------
 
 export async function listWhatsappRequests() {
   return prisma.whatsappRequest.findMany({
-    include: { specialist: true },
+    include: { specialist: true, client: true },
     orderBy: { date: "desc" },
   });
 }
@@ -217,7 +218,35 @@ export async function listWhatsappRequests() {
 // ---------- Llamadas y conversión ----------
 
 export async function listCallLogs() {
-  return prisma.callLog.findMany({ orderBy: { date: "desc" } });
+  return prisma.callLog.findMany({ include: { client: true }, orderBy: { date: "desc" } });
+}
+
+// ---------- Clientes ----------
+
+export type ClientWithRelations = Awaited<ReturnType<typeof listClients>>[number];
+
+export async function listClients() {
+  return prisma.client.findMany({
+    include: {
+      _count: { select: { reservations: true, inbodySales: true, whatsappRequests: true, callLogs: true } },
+    },
+    orderBy: { name: "asc" },
+  });
+}
+
+export async function getClient(id: string) {
+  return prisma.client.findUnique({
+    where: { id },
+    include: {
+      reservations: {
+        include: { consultorio: { include: { sucursal: true } }, specialist: true, charge: true },
+        orderBy: { startAt: "desc" },
+      },
+      inbodySales: { orderBy: { date: "desc" } },
+      whatsappRequests: { include: { specialist: true }, orderBy: { date: "desc" } },
+      callLogs: { orderBy: { date: "desc" } },
+    },
+  });
 }
 
 // ---------- Flujo B2B ----------

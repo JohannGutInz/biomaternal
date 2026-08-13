@@ -35,6 +35,10 @@ export const APP_ROUTE = {
     agenda: {
       index: "/app/agenda"
     },
+    clientes: {
+      index: "/app/clientes",
+      detail: (id: string) => `/app/clientes/${id}`
+    },
     reservas: {
       index: "/app/reservas"
     },

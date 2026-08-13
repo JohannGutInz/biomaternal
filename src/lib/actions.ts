@@ -18,6 +18,7 @@ import {
   nuevoEspecialistaAdminFormSchema,
   sucursalSchema,
   consultorioSchema,
+  clientSchema,
   reservationSchema,
   reservationSelfSchema,
   cancelReservationSchema,
@@ -47,6 +48,7 @@ import type {
   CancelReservationData,
   CompleteReservationData,
   ChargeData,
+  ClientData,
   InbodySaleData,
   WhatsappRequestData,
   CallLogData,
@@ -74,6 +76,20 @@ async function requireAdmin() {
 
   if (!session) unauthorized();
   if (session.role !== "ADMIN") forbidden();
+
+  return session;
+}
+
+// Especialistas también capturan clientes al vuelo desde su propio portal
+// (ClientPicker en la auto-reserva) — crear un cliente es dato de bajo
+// riesgo, a diferencia del resto de las mutaciones de backoffice.
+async function requireStaffOrSpecialist() {
+  const cookieStore = await cookies();
+  const token = cookieStore.get(SESSION_COOKIE);
+  const session = token ? await verifySessionToken(token.value) : null;
+
+  if (!session) unauthorized();
+  if (session.role !== "ADMIN" && session.role !== "SPECIALIST") forbidden();
 
   return session;
 }
@@ -599,6 +615,53 @@ export async function toggleConsultorioActiveAction(consultorioId: string, isAct
   revalidatePath(APP_ROUTE.app.consultorios.index);
 }
 
+// ---------- Clientes ----------
+// Entidad compartida por citas, ventas InBody, WhatsApp y llamadas.
+// crearClienteAction también la usa el ClientPicker para crear "al vuelo"
+// sin salir del formulario donde se está capturando la cita/venta/llamada.
+
+export async function crearClienteAction(data: ClientData): Promise<ActionState & { clientId?: string }> {
+  await requireStaffOrSpecialist();
+
+  const parsed = clientSchema.safeParse(data);
+  if (!parsed.success) {
+    return { status: "error", message: parsed.error.issues[0]?.message ?? "Datos inválidos." };
+  }
+
+  const client = await prisma.client.create({
+    data: {
+      name: parsed.data.name,
+      phone: parsed.data.phone || null,
+      notes: parsed.data.notes || null,
+    },
+  });
+  revalidatePath(APP_ROUTE.app.clientes.index);
+
+  return { status: "success", message: "Cliente creado.", clientId: client.id };
+}
+
+export async function actualizarClienteAction(clientId: string, data: ClientData): Promise<ActionState> {
+  await requireAdmin();
+
+  const parsed = clientSchema.safeParse(data);
+  if (!parsed.success) {
+    return { status: "error", message: parsed.error.issues[0]?.message ?? "Datos inválidos." };
+  }
+
+  await prisma.client.update({
+    where: { id: clientId },
+    data: {
+      name: parsed.data.name,
+      phone: parsed.data.phone || null,
+      notes: parsed.data.notes || null,
+    },
+  });
+  revalidatePath(APP_ROUTE.app.clientes.index);
+  revalidatePath(`${APP_ROUTE.app.clientes.index}/${clientId}`);
+
+  return { status: "success", message: "Cliente actualizado." };
+}
+
 // ---------- Reservas ----------
 // Integridad de no-solape en dos capas: constraint EXCLUDE USING gist a
 // nivel BD (fuente de verdad, ver prisma/migrations) + este chequeo
@@ -613,8 +676,7 @@ async function createReservationTx(d: {
   type: "FULL_DAY" | "HOURLY";
   startAt: string;
   endAt: string;
-  patientName?: string;
-  patientPhone?: string;
+  clientId?: string;
   inbodyIncluded?: boolean;
   notes?: string;
   createdBy?: string;
@@ -639,8 +701,7 @@ async function createReservationTx(d: {
           type: d.type,
           startAt: new Date(d.startAt),
           endAt: new Date(d.endAt),
-          patientName: d.patientName || null,
-          patientPhone: d.patientPhone || null,
+          clientId: d.clientId || null,
           inbodyIncluded: d.inbodyIncluded ?? false,
           notes: d.notes || null,
           createdBy: d.createdBy,
@@ -843,8 +904,7 @@ export async function crearInbodySaleAction(data: InbodySaleData): Promise<Actio
   await prisma.inbodySale.create({
     data: {
       date: new Date(parsed.data.date),
-      clientName: parsed.data.clientName,
-      clientPhone: parsed.data.clientPhone || null,
+      clientId: parsed.data.clientId,
       type: parsed.data.type,
       price: parsed.data.price,
       notes: parsed.data.notes || null,
@@ -870,7 +930,7 @@ export async function crearWhatsappRequestAction(data: WhatsappRequestData): Pro
   await prisma.whatsappRequest.create({
     data: {
       date: new Date(parsed.data.date),
-      contact: parsed.data.contact,
+      clientId: parsed.data.clientId,
       specialistId: parsed.data.specialistId || null,
       confirmed: parsed.data.confirmed,
       declineReason: parsed.data.confirmed ? null : parsed.data.declineReason || null,
@@ -897,7 +957,7 @@ export async function crearCallLogAction(data: CallLogData): Promise<ActionState
   await prisma.callLog.create({
     data: {
       date: new Date(parsed.data.date),
-      contactName: parsed.data.contactName,
+      clientId: parsed.data.clientId,
       direction: parsed.data.direction,
       isNewContact: parsed.data.isNewContact,
       generatedAppointment: parsed.data.generatedAppointment,

@@ -120,11 +120,11 @@ const reservationBaseSchema = z.object({
   type: z.enum(["FULL_DAY", "HOURLY"], { error: "Selecciona el tipo de reserva." }),
   startAt: z.string().min(1, "La fecha/hora de inicio es obligatoria."),
   endAt: z.string().min(1, "La fecha/hora de fin es obligatoria."),
-  // Una reserva HOURLY es una cita con un paciente puntual; una FULL_DAY es
-  // la jornada completa de un especialista (varios pacientes), por eso el
-  // paciente no aplica ahí — se exige solo cuando type = HOURLY (ver refine).
-  patientName: z.string().optional(),
-  patientPhone: z.string().optional(),
+  // Una reserva HOURLY es una cita con un cliente/paciente puntual; una
+  // FULL_DAY es la jornada completa de un especialista (varios pacientes),
+  // por eso el cliente no aplica ahí — se exige solo cuando type = HOURLY
+  // (ver refine).
+  clientId: z.string().optional(),
   inbodyIncluded: z.boolean(),
   notes: z.string().optional(),
 });
@@ -134,14 +134,14 @@ const endAfterStartRefinement = {
   message: "La hora de fin debe ser posterior a la de inicio.",
 } as const;
 
-const patientRequiredForHourlyRefinement = {
-  check: (d: { type: string; patientName?: string }) => d.type !== "HOURLY" || !!d.patientName?.trim(),
-  message: "El nombre del paciente es obligatorio para una cita por hora.",
+const clientRequiredForHourlyRefinement = {
+  check: (d: { type: string; clientId?: string }) => d.type !== "HOURLY" || !!d.clientId,
+  message: "Selecciona o crea un cliente para una cita por hora.",
 } as const;
 
 export const reservationSchema = reservationBaseSchema
   .refine(endAfterStartRefinement.check, { message: endAfterStartRefinement.message, path: ["endAt"] })
-  .refine(patientRequiredForHourlyRefinement.check, { message: patientRequiredForHourlyRefinement.message, path: ["patientName"] });
+  .refine(clientRequiredForHourlyRefinement.check, { message: clientRequiredForHourlyRefinement.message, path: ["clientId"] });
 
 export type ReservationData = z.infer<typeof reservationSchema>;
 
@@ -150,7 +150,7 @@ export type ReservationData = z.infer<typeof reservationSchema>;
 export const reservationSelfSchema = reservationBaseSchema
   .omit({ specialistId: true })
   .refine(endAfterStartRefinement.check, { message: endAfterStartRefinement.message, path: ["endAt"] })
-  .refine(patientRequiredForHourlyRefinement.check, { message: patientRequiredForHourlyRefinement.message, path: ["patientName"] });
+  .refine(clientRequiredForHourlyRefinement.check, { message: clientRequiredForHourlyRefinement.message, path: ["clientId"] });
 
 export type ReservationSelfData = z.infer<typeof reservationSelfSchema>;
 
@@ -181,12 +181,24 @@ export const chargeSchema = z.object({
 
 export type ChargeData = z.infer<typeof chargeSchema>;
 
+// ---------- Clientes ----------
+// Entidad compartida por citas, ventas InBody, WhatsApp y llamadas — ver
+// modelo Client en schema.prisma. `name` admite texto libre (el Excel de
+// origen a veces registra más de una persona en un mismo campo).
+
+export const clientSchema = z.object({
+  name: z.string().min(1, "El nombre es obligatorio."),
+  phone: z.string().optional(),
+  notes: z.string().optional(),
+});
+
+export type ClientData = z.infer<typeof clientSchema>;
+
 // ---------- Seguimiento de recepción (InBody, WhatsApp, llamadas, B2B) ----------
 
 export const inbodySaleSchema = z.object({
   date: z.string().min(1, "La fecha es obligatoria."),
-  clientName: z.string().min(1, "El nombre del cliente es obligatorio."),
-  clientPhone: z.string().optional(),
+  clientId: z.string().min(1, "Selecciona o crea un cliente."),
   type: z.enum(["CORPORATE", "PUBLIC"], { error: "Selecciona el tipo de cliente." }),
   price: z.number().int().nonnegative("El precio no puede ser negativo."),
   notes: z.string().optional(),
@@ -196,7 +208,7 @@ export type InbodySaleData = z.infer<typeof inbodySaleSchema>;
 
 const whatsappRequestBaseSchema = z.object({
   date: z.string().min(1, "La fecha es obligatoria."),
-  contact: z.string().min(1, "El nombre o teléfono del contacto es obligatorio."),
+  clientId: z.string().min(1, "Selecciona o crea un cliente."),
   specialistId: z.string().optional(),
   confirmed: z.boolean(),
   declineReason: z.string().optional(),
@@ -212,7 +224,7 @@ export type WhatsappRequestData = z.infer<typeof whatsappRequestSchema>;
 
 export const callLogSchema = z.object({
   date: z.string().min(1, "La fecha es obligatoria."),
-  contactName: z.string().min(1, "El nombre es obligatorio."),
+  clientId: z.string().min(1, "Selecciona o crea un cliente."),
   direction: z.enum(["INBOUND", "OUTBOUND"], { error: "Selecciona el tipo de llamada." }),
   isNewContact: z.boolean(),
   generatedAppointment: z.boolean(),
