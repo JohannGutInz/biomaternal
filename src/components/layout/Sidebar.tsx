@@ -86,7 +86,7 @@ export function Sidebar({
             href={APP_ROUTE.app.dashboard.index}
             className={cn("truncate text-lg font-semibold leading-none text-white", collapsed && "lg:hidden")}
           >
-            Glamour<span className="text-gold-400">Models</span>
+            Bio<span className="text-gold-400">maternal</span>
           </Link>
           <button
             type="button"
@@ -157,7 +157,7 @@ export function Sidebar({
         </nav>
 
         <div className={cn("border-t border-white/5 p-4 text-[11px] text-zinc-500", collapsed && "lg:hidden")}>
-          <p>GlamourModels · v1</p>
+          <p>Biomaternal · v1</p>
           <p className="mt-0.5">Backoffice interno — no indexado</p>
         </div>
       </aside>

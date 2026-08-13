@@ -12,11 +12,6 @@ export const APP_ROUTE = {
     moderation: {
       index: "/app/moderacion"
     },
-    // Agency marketing photo gallery (EventoFoto) — feeds the public landing
-    // carousel. Not booking/reservation management.
-    events: {
-      index: "/app/eventos"
-    },
     models: {
       index: "/app/modelos",
       new: "/app/modelos/nuevo",
@@ -24,20 +19,11 @@ export const APP_ROUTE = {
         id: (id: string) => `/app/modelos/${id}/editar`
       },
     },
-    packages: {
-      index: "/app/paquetes"
-    },
     catalogs: {
       index: "/app/catalogs"
     },
     model: {
       profile: "/app/modelo/perfil"
-    },
-    convocatorias: {
-      index: "/app/convocatorias",
-      nueva: "/app/convocatorias/nueva",
-      detail: (id: string) => `/app/convocatorias/${id}`,
-      edit: (id: string) => `/app/convocatorias/${id}/editar`,
     },
   },
   registration: {
@@ -45,9 +31,5 @@ export const APP_ROUTE = {
   },
   contact: {
     index: "/contacto"
-  },
-  convocatorias: {
-    index: "/convocatorias",
-    detail: (id: string) => `/convocatorias/${id}`,
   },
 };

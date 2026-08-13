@@ -1,6 +1,6 @@
-// Domain model v1 — talent agency backoffice.
-// Every entity carries agencyId to support logical multi-tenancy from day one,
-// even though today only one agency exists (see CLAUDE-proyecto-real.md).
+// Domain model v1 — talent agency backoffice, mid-pivot to Biomaternal
+// (clinic operator, single client — see CLAUDE-biomaternal.md). `agencyId`
+// is legacy scaffolding from the pre-pivot codebase, not a real tenant key.
 
 import { User } from "@/generated/prisma/browser";
 
@@ -84,21 +84,6 @@ export interface RegistrationApplication {
   updatedAt: string;
   reviewToken: string;
   rejectedAt?: string;
-}
-
-export type PackageStatus = "borrador" | "enviado" | "aprobado" | "rechazado";
-
-export interface Package {
-  id: string;
-  agencyId: string;
-  name: string;
-  clientId: string;
-  modelIds: string[];
-  status: PackageStatus;
-  total: number;
-  createdAt: string;
-  description?: string | null;
-  publicToken?: string | null;
 }
 
 export type StaffRole = "admin" | "booker" | "moderador" | "finanzas";

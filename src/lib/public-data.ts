@@ -122,30 +122,6 @@ export async function listFeaturedModels(limit = 4): Promise<PublicModel[]> {
   return Promise.all(models.map(toPublicModel));
 }
 
-// ---------- Eventos carousel (landing) ----------
-
-export interface EventoDestacado {
-  id: string;
-  imageUrl: string;
-  alt: string;
-}
-
-// Backed by the EventoFoto table, managed from /app/eventos (backoffice).
-// Photos are stored as bare public URLs (uploadPublicImage in storage.ts),
-// not signed — no signAssetUrls() step needed here. EventosCarrusel didn't
-// change its rendering, just gained a real per-photo `alt` (previously a
-// fixed "Evento realizado por {agencia}" string).
-export async function listEventosDestacados(): Promise<EventoDestacado[]> {
-  const fotos = await prisma.eventoFoto.findMany({
-    where: { published: true },
-    orderBy: { position: "asc" },
-    // The 12-photo cap is enforced when publishing (toggleEventoFotoPublishedAction
-    // in actions.ts) — this `take` is just defense in depth, not the source of truth.
-    take: 12,
-  });
-  return fotos.map((foto) => ({ id: foto.id, imageUrl: foto.url, alt: foto.alt }));
-}
-
 // ---------- Catalog filter options (real DB, no fixtures) ----------
 
 export async function listPublicCategories() {
@@ -201,93 +177,11 @@ export interface PortfolioEvent {
 }
 
 // The mock AgencyEvent/Client fixtures this used to read from were removed
-// when the admin bookings/clientes modules were deleted (their concept of
-// "evento" is now EventoFoto — a marketing photo, not a booking). This public
-// page (src/app/(public)/portafolio) still exists and is footer-linked, but
-// has no real data source yet; stubbed to empty like listPortfolioEntradas
-// above until it's redesigned around EventoFoto or removed.
+// when the admin bookings/clientes modules were deleted, and the marketing
+// photo gallery (EventoFoto) that later replaced them was itself retired in
+// the Biomaternal pivot (see CLAUDE-biomaternal.md). This public page
+// (src/app/(public)/portafolio) still exists and is footer-linked, but has no
+// real data source; stubbed to empty like listPortfolioEntradas above.
 export async function listPortfolioEvents(): Promise<PortfolioEvent[]> {
   return [];
-}
-
-// ---------- Package proposal (real DB) ----------
-
-export interface PaquetePublicoModel {
-  id: string;
-  fullName: string;
-  mainPhotoUrl: string | null;
-  categories: string[];
-  activities: string[];
-  location: string;
-  height: number | null;
-  currentWeight: number | null;
-  genre: string;
-}
-
-export interface PaquetePublico {
-  name: string;
-  description: string | undefined;
-  models: PaquetePublicoModel[];
-}
-
-export async function getPaquetePublico(token: string): Promise<PaquetePublico | null> {
-  const pkg = await prisma.package.findUnique({
-    where: { token },
-    include: {
-      models: {
-        include: {
-          categories: { select: { name: true } },
-          activities: { select: { name: true } },
-          country: { select: { name: true } },
-          city: { select: { name: true } },
-          assets: true,
-        },
-      },
-    },
-  });
-  if (!pkg) return null;
-  return {
-    name: pkg.name,
-    description: pkg.description ?? undefined,
-    models: await Promise.all(
-      pkg.models.map(async (m) => ({
-        id: m.id,
-        fullName: `${m.firstName} ${m.paternalLastName}`,
-        mainPhotoUrl: getMainPhotoUrl(await signAssetUrls(m.assets)),
-        categories: m.categories.map((c) => c.name),
-        activities: m.activities.map((a) => a.name),
-        location: `${m.city.name}, ${m.country.name}`,
-        height: m.height,
-        currentWeight: m.currentWeight,
-        genre: m.genre,
-      })),
-    ),
-  };
-}
-
-// ---------- Convocatorias públicas ----------
-
-export async function listPublicConvocatorias() {
-  return prisma.convocatoria.findMany({
-    where: { status: "OPEN" },
-    orderBy: { fechaEvento: "asc" },
-    select: {
-      id: true,
-      titulo: true,
-      ciudad: true,
-      tipo: true,
-      fechaEvento: true,
-      horario: true,
-      lugar: true,
-      pago: true,
-      whatsappNumber: true,
-      publishedAt: true,
-    },
-  });
-}
-
-export async function getPublicConvocatoria(id: string) {
-  return prisma.convocatoria.findFirst({
-    where: { id, status: "OPEN" },
-  });
 }

@@ -50,3 +50,6 @@ next-env.d.ts
 
 # Archivos de trabajo local
 glam.html
+
+# Respaldos de datos pre-migración (contienen datos reales del cliente)
+/backups/

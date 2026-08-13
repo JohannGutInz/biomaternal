@@ -1,12 +1,4 @@
-import {
-  Images,
-  List,
-  Megaphone,
-  PackageOpen,
-  ShieldCheck,
-  UsersRound,
-  type LucideIcon,
-} from "lucide-react";
+import { List, ShieldCheck, UsersRound, type LucideIcon } from "lucide-react";
 import { APP_ROUTE } from "@/lib/routes";
 
 export interface NavItem {
@@ -26,14 +18,6 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { label: "Modelos", href: APP_ROUTE.app.models.index, icon: UsersRound },
       { label: "Moderación", href: APP_ROUTE.app.moderation.index, icon: ShieldCheck },
-    ],
-  },
-  {
-    label: "Comercial",
-    items: [
-      { label: "Convocatorias", href: APP_ROUTE.app.convocatorias.index, icon: Megaphone },
-      { label: "Paquetes", href: APP_ROUTE.app.packages.index, icon: PackageOpen },
-      { label: "Eventos", href: APP_ROUTE.app.events.index, icon: Images },
     ],
   },
   {

@@ -1,19 +1,3 @@
-<!-- BEGIN:nextjs-agent-rules -->
-# This is NOT the Next.js you know
-
-This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
-<!-- END:nextjs-agent-rules -->
-
----
-
-# Caveman Mode
-
-**ALWAYS activate caveman mode at session start and keep it active for all responses.**
-Invoke the `caveman:caveman` skill at the start of every conversation. Level: `full`.
-Never revert unless user says "stop caveman" or "normal mode".
-
----
-
 # Commit Convention
 
 Do **not** add `Co-Authored-By: Claude` (or any Claude/Anthropic co-author trailer) to commit messages.
@@ -40,7 +24,11 @@ Current primitives: `Input` · `Select` · `Textarea` · `Button` · `Checkbox` 
 
 # Project Resume
 
-**Backoffice Models** — agency management platform for talent/model agencies.
+**Biomaternal Backoffice** — clinic/consultorio management platform for the Biomaternal clinics
+(single client, not multi-tenant). Mid-pivot from a prior talent-agency codebase
+("Backoffice Models") — see `CLAUDE-biomaternal.md` for the full pivot doc and phased roadmap.
+Fase 0 (rebranding + retiring agency-only modules) is done; `Sucursal`/`Consultorio`/
+`Reservation`/`Charge` and the `Model`→`Specialist` entity rename land in Fase 1.
 
 ## Stack
 
@@ -52,7 +40,7 @@ Current primitives: `Input` · `Select` · `Textarea` · `Button` · `Checkbox` 
 | ORM | Prisma 7 (`@prisma/adapter-pg`) |
 | Database | PostgreSQL via **Supabase** |
 | Deployment | **Vercel** (`vercel-build` script runs migrations) |
-| Auth | Custom JWT sessions — `jose` (HS256), cookie `glamour_session`, 8h TTL |
+| Auth | Custom JWT sessions — `jose` (HS256), cookie `biomaternal_session`, 8h TTL |
 | Forms | `react-hook-form` + `zod` |
 | Charts | `recharts` |
 | Email | `resend` |
@@ -62,9 +50,16 @@ Current primitives: `Input` · `Select` · `Textarea` · `Button` · `Checkbox` 
 
 ## DB Models (Prisma)
 
-`User` · `Model` · `Kyc` · `Category` · `Country` · `State` · `Municipality`
+`User` · `Model` · `Kyc` · `Category` · `Activity` · `Country` · `State` · `Municipality` · `Asset` · `ModelMedia`
+
+`UserRole {ADMIN, STAFF, SPECIALIST}` — renamed from `{ADMIN, USER, MODEL}` in Fase 0.
+`Model` still carries its pre-pivot talent-agency attributes; renaming it to `Specialist` with
+professional attributes (`licenseNumber`, specialties, etc.) is Fase 1 scope.
 
 KYC statuses: `PENDING` · `APPROVED` · `REJECTED` · `REQUIRES_CHANGES`
+
+Retired in Fase 0 (tables dropped, data backed up to `backups/fase0-pre-migration-backup.json`,
+gitignored): `Package`, `Convocatoria`, `ConvocatoriaVista`, `EventoFoto`.
 
 ## Routes
 
@@ -73,14 +68,15 @@ KYC statuses: `PENDING` · `APPROVED` · `REJECTED` · `REQUIRES_CHANGES`
 | Path | Description |
 |---|---|
 | `/` | Landing page |
-| `/portafolio` | Agency portfolio |
+| `/portafolio` | Portfolio (stubbed, no data source yet) |
 | `/talentos` | Public talent grid |
 | `/talentos/[id]` | Individual talent profile |
 | `/registro` | Model self-registration form |
 | `/contacto` | Contact form |
 | `/retro/[token]` | Feedback page for rejected/requires-changes models |
+| `/servicios`, `/cobertura`, `/como-trabajamos`, `/razones`, `/historia`, `/mision-vision`, `/privacidad` | Static marketing pages — still talent-agency copy, pending Fase 2 landing rewrite |
 
-### Private (`src/app/app/(private)/`) — requires auth
+### Private (`src/app/app/(private)/`) — requires auth (STAFF/ADMIN)
 
 | Path | Description |
 |---|---|
@@ -90,20 +86,21 @@ KYC statuses: `PENDING` · `APPROVED` · `REJECTED` · `REQUIRES_CHANGES`
 | `/app/modelos/[id]` | Model detail |
 | `/app/moderacion` | KYC moderation queue |
 | `/app/moderacion/[id]` | KYC review detail |
-| `/app/bookings` | Bookings |
-| `/app/calendario` | Calendar |
 | `/app/catalogs` | Catalogs |
-| `/app/clientes` | Clients |
-| `/app/configuracion` | Agency settings |
-| `/app/eventos` | Events |
-| `/app/ingresos` | Revenue/income |
-| `/app/paquetes` | Packages |
+| `/app/configuracion` | Site/brand settings |
+
+### Specialist portal (`src/app/app/(model)/`) — requires auth (SPECIALIST)
+
+| Path | Description |
+|---|---|
+| `/app/modelo/perfil` | Own profile (photos, categories, KYC-gated editing) |
 
 ### API
 
 | Path | Description |
 |---|---|
 | `/api/cron/purge-rechazados` | Cron — purge stale rejected models |
+| `/api/upload/image`, `/api/upload/video-presign` | S3 upload endpoints |
 
 ## Key Files
 

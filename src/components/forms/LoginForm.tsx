@@ -37,25 +37,25 @@ export default function LoginForm() {
           }}
         />
         <div className="relative text-2xl font-semibold tracking-tight">
-          Glamour<span className="text-gold-400">Models</span>
+          Bio<span className="text-gold-400">maternal</span>
         </div>
         <div className="relative max-w-md">
           <p className="text-3xl leading-tight font-light text-zinc-100">
-            La plataforma que ordena el talento, los eventos y los clientes de tu agencia
+            La plataforma que ordena consultorios, especialistas y cobros de tus clínicas
             <span className="text-gold-400">.</span>
           </p>
           <p className="mt-6 text-sm text-zinc-500">
-            Backoffice interno — acceso restringido al staff de la agencia.
+            Backoffice interno — acceso restringido al staff de la clínica.
           </p>
         </div>
-        <p className="relative text-xs text-zinc-600">© {new Date().getFullYear()} GlamourModels. Todos los derechos reservados.</p>
+        <p className="relative text-xs text-zinc-600">© {new Date().getFullYear()} Biomaternal. Todos los derechos reservados.</p>
       </div>
 
       <div className="flex flex-1 items-center justify-center bg-zinc-50 px-6 py-12">
         <div className="w-full max-w-sm">
           <div className="mb-10 lg:hidden">
             <span className="text-2xl font-semibold tracking-tight text-zinc-950">
-              Glamour<span className="text-gold-500">Models</span>
+              Bio<span className="text-gold-500">maternal</span>
             </span>
           </div>
 

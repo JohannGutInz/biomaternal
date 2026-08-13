@@ -2,21 +2,18 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bell, User } from "lucide-react";
+import { User } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export function ModelPortalNav({ unreadCount }: { unreadCount: number }) {
+export function ModelPortalNav() {
   const pathname = usePathname();
 
-  const tabs = [
-    { href: "/app/modelo/perfil", label: "Mi perfil", Icon: User },
-    { href: "/app/modelo/convocatorias", label: "Convocatorias", Icon: Bell, badge: unreadCount },
-  ];
+  const tabs = [{ href: "/app/modelo/perfil", label: "Mi perfil", Icon: User }];
 
   return (
     <nav className="border-b border-zinc-200 bg-white px-4 lg:px-8">
       <div className="mx-auto flex max-w-2xl">
-        {tabs.map(({ href, label, Icon, badge }) => {
+        {tabs.map(({ href, label, Icon }) => {
           const active = pathname.startsWith(href);
           return (
             <Link
@@ -32,11 +29,6 @@ export function ModelPortalNav({ unreadCount }: { unreadCount: number }) {
             >
               <Icon className="h-4 w-4 shrink-0" />
               {label}
-              {badge != null && badge > 0 && (
-                <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white leading-none">
-                  {badge > 9 ? "9+" : badge}
-                </span>
-              )}
             </Link>
           );
         })}

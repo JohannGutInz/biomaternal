@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
   }
 
   let modelId: string | null = null;
-  if (session?.role === "MODEL") {
+  if (session?.role === "SPECIALIST") {
     const model = await prisma.model.findUnique({ where: { userId: session.sub }, select: { id: true } });
     if (!model) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
     modelId = model.id;

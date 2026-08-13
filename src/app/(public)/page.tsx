@@ -2,18 +2,15 @@ import Link from "next/link";
 import Image from "next/image";
 import { ArrowDown, ArrowRight } from "lucide-react";
 import { BrandBackground } from "@/components/public/BrandBackground";
-import { ClientesCarrusel } from "@/components/public/ClientesCarrusel";
-import { EventosCarrusel } from "@/components/public/EventosCarrusel";
 import { TalentCard } from "@/components/public/TalentCard";
 import { WhatsAppRow } from "@/components/public/WhatsAppRow";
 import { getSiteSettings } from "@/lib/data";
-import { listEventosDestacados, listFeaturedModels } from "@/lib/public-data";
+import { listFeaturedModels } from "@/lib/public-data";
 
 export default async function HomePage() {
-  const [config, featuredModels, eventos] = await Promise.all([
+  const [config, featuredModels] = await Promise.all([
     getSiteSettings(),
     listFeaturedModels(8),
-    listEventosDestacados(),
   ]);
 
   const ctas = [
@@ -115,23 +112,15 @@ export default async function HomePage() {
 
         {/* Scroll arrow */}
         <a
-          href="#clientes"
+          href="#whatsapp"
           className="absolute bottom-8 left-1/2 z-10 flex h-10 w-10 -translate-x-1/2 items-center justify-center rounded-full border border-white/20 text-white/70 transition-colors hover:border-glam-400 hover:text-glam-400"
         >
           <ArrowDown className="h-5 w-5" />
         </a>
       </section>
 
-      {/* ── Clientes ── */}
-      <div id="clientes" className="relative z-10 scroll-mt-16">
-        <ClientesCarrusel />
-      </div>
-
-      {/* ── Eventos ── */}
-      {eventos.length > 0 && <EventosCarrusel eventos={eventos} agencyName={config.agencyName} />}
-
       {/* ── WhatsApp, pegado al final antes del footer ── */}
-      <div className="relative z-10 px-6 pb-14">
+      <div id="whatsapp" className="relative z-10 scroll-mt-16 px-6 pb-14">
         <WhatsAppRow />
       </div>
 

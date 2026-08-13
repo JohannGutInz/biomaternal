@@ -9,8 +9,8 @@ datasource db {
 
 enum UserRole {
   ADMIN
-  USER
-  MODEL
+  STAFF
+  SPECIALIST
 }
 
 model User {
@@ -18,7 +18,7 @@ model User {
   email          String   @unique
   username       String
   hashedPassword String   @map("hashed_password")
-  role           UserRole @default(USER)
+  role           UserRole @default(STAFF)
   createdAt      DateTime @default(now()) @map("created_at")
 
   model Model?
@@ -111,18 +111,6 @@ enum KycStatus {
   REQUIRES_CHANGES
 }
 
-enum PackageStatus {
-  DRAFT
-  SENT
-  CLOSED
-}
-
-enum ConvocatoriaStatus {
-  DRAFT
-  OPEN
-  CLOSED
-}
-
 enum MediaType {
   PHOTO_CASUAL
   PHOTO_BOOK
@@ -185,10 +173,8 @@ model Model {
   hasVisa            Boolean         @default(false) @map("has_visa")
   hiddenFromCatalog  Boolean         @default(false) @map("hidden_from_catalog")
 
-  assets             Asset[]
-  media              ModelMedia[]
-  convocatoriaVistas ConvocatoriaVista[]
-  packages           Package[]
+  assets Asset[]
+  media  ModelMedia[]
 
   kycId String @unique @map("kyc_id")
   kyc   Kyc    @relation(fields: [kycId], references: [id])
@@ -245,68 +231,3 @@ model ModelMedia {
   @@map("model_media")
 }
 
-model Convocatoria {
-  id             String             @id @default(uuid())
-  titulo         String
-  ciudad         String
-  tipo           String
-  fechaEvento    DateTime           @map("fecha_evento") @db.Date
-  horario        String
-  lugar          String
-  funciones      String
-  pago           String
-  perfil         String
-  cuerpo         String             @default("")
-  whatsappNumber String             @map("whatsapp_number")
-  status         ConvocatoriaStatus @default(DRAFT)
-  publishedAt    DateTime?          @map("published_at")
-  createdAt      DateTime           @default(now()) @map("created_at")
-  updatedAt      DateTime           @updatedAt @map("updated_at")
-
-  vistas ConvocatoriaVista[]
-
-  @@map("convocatorias")
-}
-
-model Package {
-  id          String        @id @default(uuid())
-  name        String
-  description String?
-  token       String        @unique @default(uuid())
-  status      PackageStatus @default(DRAFT)
-  createdAt   DateTime      @default(now()) @map("created_at")
-  updatedAt   DateTime      @updatedAt @map("updated_at")
-
-  models Model[]
-
-  @@map("packages")
-}
-
-model ConvocatoriaVista {
-  id             String   @id @default(uuid())
-  modeloId       String   @map("modelo_id")
-  convocatoriaId String   @map("convocatoria_id")
-  vistoAt        DateTime @default(now()) @map("visto_at")
-
-  modelo       Model        @relation(fields: [modeloId], references: [id], onDelete: Cascade)
-  convocatoria Convocatoria @relation(fields: [convocatoriaId], references: [id], onDelete: Cascade)
-
-  @@unique([modeloId, convocatoriaId])
-  @@map("convocatoria_vistas")
-}
-
-// Agency marketing photos shown in the public landing carousel (EventosCarrusel).
-// Not to be confused with ModelMedia.PHOTO_EVENT, which is a model's own event
-// photos inside their personal book.
-model EventoFoto {
-  id        String   @id @default(uuid())
-  url       String
-  alt       String
-  position  Int      @default(0)
-  // Matches the app-level rule: crearEventoFotoAction (actions.ts) always
-  // creates rows unpublished — the admin publishes by hand after review.
-  published Boolean  @default(false)
-  createdAt DateTime @default(now()) @map("created_at")
-
-  @@map("evento_fotos")
-}

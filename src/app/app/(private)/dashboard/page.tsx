@@ -1,4 +1,4 @@
-import { Images, PackageOpen, ShieldCheck, UserPlus, UserRoundPlus, UsersRound } from "lucide-react";
+import { ShieldCheck, UserPlus, UserRoundPlus, UsersRound } from "lucide-react";
 import { StatCard } from "@/components/ui/StatCard";
 import { AlertList } from "@/components/dashboard/AlertList";
 import { QuickActions } from "@/components/dashboard/QuickActions";
@@ -20,20 +20,13 @@ export default async function DashboardPage() {
         <p className="mt-1 text-sm text-zinc-500">{formatLongDate(now)}</p>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <StatCard
           title="Modelos activos"
           value={String(stats.activeModels)}
           subtitle="Con KYC aprobado"
           icon={UsersRound}
           tone="zinc"
-        />
-        <StatCard
-          title="Paquetes"
-          value={String(stats.pendingPackages)}
-          subtitle="Pendientes / enviados"
-          icon={PackageOpen}
-          tone="gold"
         />
         <StatCard
           title="Solicitudes pendientes"
@@ -54,20 +47,12 @@ export default async function DashboardPage() {
               subtitle: "Esperando moderación",
               href: APP_ROUTE.app.moderation.index,
             },
-            {
-              icon: PackageOpen,
-              tone: "sky",
-              title: `${stats.draftPackages} paquetes sin enviar`,
-              subtitle: "En borrador, listos para el cliente",
-              href: APP_ROUTE.app.packages.index,
-            },
           ]}
         />
 
         <QuickActions
           items={[
             { icon: UserRoundPlus, label: "Nuevo modelo", href: APP_ROUTE.app.models.new },
-            { icon: Images, label: "Fotos de eventos", href: APP_ROUTE.app.events.index },
             { icon: ShieldCheck, label: "Revisar solicitudes", href: APP_ROUTE.app.moderation.index },
           ]}
         />

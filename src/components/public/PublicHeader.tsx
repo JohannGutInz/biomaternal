@@ -7,14 +7,11 @@ import { cn } from "@/lib/utils";
 
 // Exact copy of the client's approved mockup nav (website/*.html): one "MENÚ ▾"
 // button, one flat dropdown panel, same link order and dividers on every page.
-// The client's own list has no "Convocatorias" entry — added right after the
-// catalog link since that route exists and needs to stay reachable.
 const MENU_GROUP_1 = [
   { href: "/", label: "Inicio" },
   { href: "/servicios", label: "Servicios" },
   { href: "/cobertura", label: "Cobertura" },
   { href: "/talentos", label: "Nuestro catálogo/portafolio" },
-  { href: "/convocatorias", label: "Convocatorias" },
   { href: "/como-trabajamos", label: "¿Cómo trabajamos?" },
   { href: "/razones", label: "¿Por qué elegir a Glamour Models?" },
 ];

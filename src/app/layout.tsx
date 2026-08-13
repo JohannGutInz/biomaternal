@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Glamour Models ",
-  description: "Glamour Models agencia de talentos y modelos, somos lo que quieres ver",
+  title: "Biomaternal",
+  description: "Biomaternal — administrador de clínicas y consultorios",
 };
 
 export default function RootLayout({

@@ -1,4 +1,4 @@
-import { getCurrentUser, getModelUnreadConvocatorias, getOwnModel } from "@/lib/data";
+import { getCurrentUser, getOwnModel } from "@/lib/data";
 import { APP_ROUTE } from "@/lib/routes";
 import { logoutAction } from "@/lib/actions";
 import { Button } from "@/components/ui/Button";
@@ -30,14 +30,11 @@ export default async function ModelGroupLayout({
 }) {
   const user = await getCurrentUser();
 
-  if (!user || user.role !== "MODEL") {
+  if (!user || user.role !== "SPECIALIST") {
     redirect(APP_ROUTE.app.login.index);
   }
 
-  const [unreadCount, model] = await Promise.all([
-    getModelUnreadConvocatorias(user.id),
-    getOwnModel(user.id),
-  ]);
+  const model = await getOwnModel(user.id);
 
   const kycStatus = model?.kyc.status;
   const banner = kycStatus ? KYC_STATUS_BANNER[kycStatus] : undefined;
@@ -47,7 +44,7 @@ export default async function ModelGroupLayout({
       <header className="sticky top-0 z-30 flex items-center justify-between border-b border-zinc-200 bg-white px-6 py-3.5 shadow-sm">
         <div className="flex items-center gap-3">
           <span className="text-lg font-semibold tracking-tight text-zinc-950">
-            Glamour<span className="text-gold-500">Models</span>
+            Bio<span className="text-gold-500">maternal</span>
           </span>
           {kycStatus === "APPROVED" && (
             <span className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-xs font-medium whitespace-nowrap text-emerald-700">
@@ -76,7 +73,7 @@ export default async function ModelGroupLayout({
         </div>
       )}
 
-      <ModelPortalNav unreadCount={unreadCount} />
+      <ModelPortalNav />
 
       <main className="mx-auto max-w-2xl px-4 py-8 lg:px-0">
         {children}

@@ -1,13 +1,13 @@
 import { Resend } from "resend";
 import type { RegistrationApplication } from "./types";
 
-// Transactional email (CLAUDE-proyecto-real.md: "servicio tipo Resend / SendGrid").
-// Without RESEND_API_KEY configured, it falls back to a readable console log — this way
-// the registration/moderation/contact flows stay fully wired without depending on
-// real credentials for this demo stage.
+// Transactional email (servicio tipo Resend / SendGrid). Without
+// RESEND_API_KEY configured, it falls back to a readable console log — this
+// way the registration/moderation/contact flows stay fully wired without
+// depending on real credentials for this demo stage.
 
-const FROM = process.env.EMAIL_FROM ?? "GlamourModels <no-reply@glamourmodels.demo>";
-const STAFF_INBOX = process.env.STAFF_EMAIL ?? "staff@glamourmodels.demo";
+const FROM = process.env.EMAIL_FROM ?? "Biomaternal <no-reply@biomaternal.demo>";
+const STAFF_INBOX = process.env.STAFF_EMAIL ?? "staff@biomaternal.demo";
 const SITE_URL = process.env.SITE_URL ?? "http://localhost:3000";
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
@@ -32,14 +32,14 @@ function layout(title: string, bodyHtml: string) {
   return `<div style="font-family:sans-serif;max-width:480px;margin:0 auto">
     <h2 style="color:#18181b">${title}</h2>
     ${bodyHtml}
-    <p style="color:#a1a1aa;font-size:12px;margin-top:32px">GlamourModels</p>
+    <p style="color:#a1a1aa;font-size:12px;margin-top:32px">Biomaternal</p>
   </div>`;
 }
 
 export async function emailApplicationReceived(application: RegistrationApplication) {
   return sendEmail({
     to: application.email,
-    subject: "Recibimos tu registro — GlamourModels",
+    subject: "Recibimos tu registro — Biomaternal",
     html: layout(
       "¡Gracias por registrarte!",
       `<p>Hola ${application.fullName}, recibimos tu solicitud y nuestro equipo la revisará pronto.</p>
@@ -69,34 +69,17 @@ export async function emailApplicationDecision(application: RegistrationApplicat
              <p><a href="${feedbackLink}">Ver comentarios y reenviar</a></p>`,
     },
     aprobado: {
-      subject: "¡Bienvenido a GlamourModels!",
+      subject: "¡Bienvenido a Biomaternal!",
       html: `<p>Hola ${application.fullName}, tu registro fue aprobado. Pronto el equipo de booking se pondrá en contacto contigo.</p>`,
     },
     rechazado: {
-      subject: "Resultado de tu solicitud — GlamourModels",
+      subject: "Resultado de tu solicitud — Biomaternal",
       html: `<p>Hola ${application.fullName}, gracias por tu interés. En este momento no encontramos un encaje con las categorías que manejamos.</p>`,
     },
   };
   const copy = copyByStatus[application.status];
   if (!copy) return { ok: true, simulated: true };
   return sendEmail({ to: application.email, subject: copy.subject, html: layout(copy.subject, copy.html) });
-}
-
-export async function emailConvocatoriaPublicada(
-  model: { email: string; firstName: string },
-  conv: { titulo: string; ciudad: string; fechaEvento: Date; id: string },
-) {
-  const fecha = conv.fechaEvento.toLocaleDateString("es-MX", { day: "numeric", month: "long", year: "numeric" });
-  return sendEmail({
-    to: model.email,
-    subject: `Nueva convocatoria: ${conv.titulo}`,
-    html: layout(
-      `¡Hay una nueva convocatoria para ti, ${model.firstName}!`,
-      `<p><strong>${conv.titulo}</strong> — ${conv.ciudad}</p>
-       <p>Fecha del evento: ${fecha}</p>
-       <p><a href="${SITE_URL}/convocatorias/${conv.id}">Ver detalles y postularte</a></p>`,
-    ),
-  });
 }
 
 export async function emailClientContact(data: { name: string; company: string; email: string; message: string }) {

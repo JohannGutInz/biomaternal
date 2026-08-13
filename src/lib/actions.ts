@@ -8,10 +8,9 @@ import { prisma } from "@/db";
 import { siteSettings, registrationApplications } from "./mock-data";
 import { SESSION_COOKIE, createSessionToken, verifySessionToken } from "./session";
 import { toDateKey } from "./utils";
-import { emailClientContact, emailConvocatoriaPublicada } from "./email";
+import { emailClientContact } from "./email";
 import { APP_ROUTE } from "./routes";
-import { ownModelProfileSchema, modelEditSchema, registrationActionSchema, convocatoriaSchema } from "./schemas";
-import type { ConvocatoriaFormData } from "./schemas";
+import { ownModelProfileSchema, modelEditSchema, registrationActionSchema } from "./schemas";
 import { deleteObject, keyFromObjectUrl } from "./storage";
 import z from "zod";
 import type {
@@ -87,7 +86,7 @@ export async function loginAction(data: LoginData): Promise<ActionState> {
     maxAge: 60 * 60 * 8,
   });
 
-  redirect(user.role === "MODEL" ? APP_ROUTE.app.model.profile : APP_ROUTE.app.models.index);
+  redirect(user.role === "SPECIALIST" ? APP_ROUTE.app.model.profile : APP_ROUTE.app.models.index);
 }
 
 export async function logoutAction() {
@@ -124,7 +123,7 @@ export async function submitRegistrationAction(data: RegistrationActionData): Pr
         email: d.email,
         username: `${d.firstName} ${d.paternalLastName}`,
         hashedPassword,
-        role: UserRole.MODEL,
+        role: UserRole.SPECIALIST,
       },
     });
     const kyc = await tx.kyc.create({ data: {} });
@@ -320,7 +319,6 @@ export async function saveSiteSettingsAction(data: SettingsData): Promise<void> 
   revalidatePath("/configuracion");
   revalidatePath("/");
   revalidatePath("/talentos");
-  revalidatePath("/eventos");
   revalidatePath("/contacto");
 }
 
@@ -335,7 +333,7 @@ export async function togglePublicRegistrationAction(active: boolean) {
 export async function regenerateRegistrationLinkAction() {
   await requireAdmin();
 
-  siteSettings.registrationLinkSlug = `registro-glamour-${Math.random().toString(36).slice(2, 8)}`;
+  siteSettings.registrationLinkSlug = `registro-biomaternal-${Math.random().toString(36).slice(2, 8)}`;
   revalidatePath("/configuracion");
   revalidatePath("/");
   return siteSettings.registrationLinkSlug;
@@ -391,7 +389,7 @@ export async function updateOwnModelProfileAction(data: OwnModelProfileData): Pr
   const token = cookieStore.get(SESSION_COOKIE);
   const session = token ? await verifySessionToken(token.value) : null;
 
-  if (!session || session.role !== "MODEL") {
+  if (!session || session.role !== "SPECIALIST") {
     redirect(APP_ROUTE.app.login.index);
   }
 
@@ -598,336 +596,10 @@ export async function toggleModelVisibilityAction(modelId: string, hiddenFromCat
   return { status: "success", message: hiddenFromCatalog ? "Perfil ocultado del catálogo." : "Perfil visible en el catálogo." };
 }
 
-// ---------- Convocatorias ----------
-
-export async function crearConvocatoriaAction(data: ConvocatoriaFormData): Promise<ActionState & { id?: string }> {
-  await requireAdmin();
-
-  const parsed = convocatoriaSchema.safeParse(data);
-  if (!parsed.success) {
-    return { status: "error", message: "Datos inválidos." };
-  }
-  const d = parsed.data;
-  const conv = await prisma.convocatoria.create({
-    data: {
-      id: crypto.randomUUID(),
-      titulo: d.titulo,
-      ciudad: d.ciudad,
-      tipo: d.tipo,
-      fechaEvento: new Date(d.fechaEvento),
-      horario: d.horario,
-      lugar: d.lugar,
-      funciones: d.funciones,
-      pago: d.pago,
-      perfil: d.perfil,
-      cuerpo: d.cuerpo,
-      whatsappNumber: d.whatsappNumber,
-    },
-  });
-  revalidatePath(APP_ROUTE.app.convocatorias.index);
-  return { status: "success", message: "Convocatoria creada.", id: conv.id };
-}
-
-export async function editarConvocatoriaAction(id: string, data: ConvocatoriaFormData): Promise<ActionState> {
-  await requireAdmin();
-
-  const parsed = convocatoriaSchema.safeParse(data);
-  if (!parsed.success) {
-    return { status: "error", message: "Datos inválidos." };
-  }
-  const d = parsed.data;
-  await prisma.convocatoria.update({
-    where: { id },
-    data: {
-      titulo: d.titulo,
-      ciudad: d.ciudad,
-      tipo: d.tipo,
-      fechaEvento: new Date(d.fechaEvento),
-      horario: d.horario,
-      lugar: d.lugar,
-      funciones: d.funciones,
-      pago: d.pago,
-      perfil: d.perfil,
-      cuerpo: d.cuerpo,
-      whatsappNumber: d.whatsappNumber,
-    },
-  });
-  revalidatePath(APP_ROUTE.app.convocatorias.index);
-  revalidatePath(APP_ROUTE.app.convocatorias.detail(id));
-  return { status: "success", message: "Convocatoria actualizada." };
-}
-
-export async function publicarConvocatoriaAction(id: string): Promise<void> {
-  await requireAdmin();
-
-  const conv = await prisma.convocatoria.update({
-    where: { id },
-    data: { status: "OPEN", publishedAt: new Date() },
-  });
-  revalidatePath(APP_ROUTE.app.convocatorias.index);
-  revalidatePath(APP_ROUTE.app.convocatorias.detail(id));
-
-  const approvedModels = await prisma.model.findMany({
-    where: { kyc: { status: "APPROVED" } },
-    select: { email: true, firstName: true },
-  });
-  await Promise.allSettled(approvedModels.map((m) => emailConvocatoriaPublicada(m, conv)));
-}
-
-export async function cerrarConvocatoriaAction(id: string): Promise<void> {
-  await requireAdmin();
-
-  await prisma.convocatoria.update({ where: { id }, data: { status: "CLOSED" } });
-  revalidatePath(APP_ROUTE.app.convocatorias.index);
-  revalidatePath(APP_ROUTE.app.convocatorias.detail(id));
-}
-
-export async function eliminarConvocatoriaAction(id: string): Promise<void> {
-  await requireAdmin();
-
-  await prisma.convocatoria.delete({ where: { id } });
-  revalidatePath(APP_ROUTE.app.convocatorias.index);
-  redirect(APP_ROUTE.app.convocatorias.index);
-}
-
-// ---------- Paquetes (real) ----------
-
-export async function crearPaqueteAction(data: unknown): Promise<ActionState & { paqueteId?: string }> {
-  await requireAdmin();
-
-  const parsed = z.object({
-    name: z.string().min(1),
-    description: z.string().optional(),
-  }).safeParse(data);
-  if (!parsed.success) return { status: "error", message: "Datos inválidos." };
-  const pkg = await prisma.package.create({
-    data: {
-      id: crypto.randomUUID(),
-      name: parsed.data.name,
-      description: parsed.data.description,
-      token: crypto.randomUUID(),
-    },
-  });
-  revalidatePath(APP_ROUTE.app.packages.index);
-  return { status: "success", message: "Paquete creado.", paqueteId: pkg.id };
-}
-
-export async function agregarModeloAPaqueteAction(paqueteId: string, modeloId: string): Promise<void> {
-  await requireAdmin();
-
-  await prisma.package.update({
-    where: { id: paqueteId },
-    data: { models: { connect: { id: modeloId } } },
-  });
-  revalidatePath(`${APP_ROUTE.app.packages.index}/${paqueteId}`);
-}
-
-export async function quitarModeloDelPaqueteAction(paqueteId: string, modeloId: string): Promise<void> {
-  await requireAdmin();
-
-  await prisma.package.update({
-    where: { id: paqueteId },
-    data: { models: { disconnect: { id: modeloId } } },
-  });
-  revalidatePath(`${APP_ROUTE.app.packages.index}/${paqueteId}`);
-}
-
-export async function renombrarPaqueteAction(paqueteId: string, data: unknown): Promise<ActionState> {
-  await requireAdmin();
-
-  const parsed = z.object({
-    name: z.string().min(1, "El nombre del paquete es obligatorio."),
-  }).safeParse(data);
-  if (!parsed.success) return { status: "error", message: "El nombre del paquete es obligatorio." };
-
-  await prisma.package.update({ where: { id: paqueteId }, data: { name: parsed.data.name } });
-  revalidatePath(`${APP_ROUTE.app.packages.index}/${paqueteId}`);
-  revalidatePath(APP_ROUTE.app.packages.index);
-  return { status: "success", message: "Nombre actualizado." };
-}
-
-export async function cambiarStatusPaqueteAction(
-  paqueteId: string,
-  status: "DRAFT" | "SENT" | "CLOSED",
-): Promise<void> {
-  await requireAdmin();
-
-  await prisma.package.update({ where: { id: paqueteId }, data: { status } });
-  revalidatePath(`${APP_ROUTE.app.packages.index}/${paqueteId}`);
-  revalidatePath(APP_ROUTE.app.packages.index);
-}
-
-// ---------- Convocatorias: marcar vistas desde el portal modelo ----------
-
-export async function marcarConvocatoriasVistaAction(): Promise<void> {
-  const cookieStore = await cookies();
-  const token = cookieStore.get(SESSION_COOKIE);
-  const session = token ? await verifySessionToken(token.value) : null;
-  if (!session || session.role !== "MODEL") return;
-
-  const model = await prisma.model.findUnique({
-    where: { userId: session.sub },
-    select: { id: true },
-  });
-  if (!model) return;
-
-  const open = await prisma.convocatoria.findMany({
-    where: { status: "OPEN" },
-    select: { id: true },
-  });
-
-  await Promise.allSettled(
-    open.map((conv) =>
-      prisma.convocatoriaVista.upsert({
-        where: {
-          modeloId_convocatoriaId: {
-            modeloId: model.id,
-            convocatoriaId: conv.id,
-          },
-        },
-        create: {
-          id: crypto.randomUUID(),
-          modeloId: model.id,
-          convocatoriaId: conv.id,
-        },
-        update: {},
-      }),
-    ),
-  );
-
-  revalidatePath("/app/modelo/convocatorias");
-}
-
 export async function crearModeloAdminAction(
   _data: unknown,
 ): Promise<ActionState & { modelId?: string }> {
   await requireAdmin();
 
   return { status: "error", message: "Not implemented" };
-}
-
-// ---------- EventoFoto (marketing gallery, admin) ----------
-// Content-only cap, not a technical limit of the carousel — see
-// listEventosDestacados() in public-data.ts for the public-facing counterpart.
-const MAX_PUBLISHED_EVENTO_FOTOS = 12;
-
-const crearEventoFotoSchema = z.object({
-  url: z.string().min(1, "La URL es obligatoria."),
-  alt: z.string().trim().min(1, "El texto alternativo es obligatorio.").max(200),
-});
-
-// Persists the metadata row after /api/upload/evento-image has already put the
-// file in S3. Always created unpublished — the admin reviews it (alt, crop,
-// quality) and publishes it by hand via toggleEventoFotoPublishedAction, which
-// stays the single gatekeeper for the 12-photo cap. No parallel path skips it.
-export async function crearEventoFotoAction(data: unknown): Promise<ActionState> {
-  await requireAdmin();
-
-  const parsed = crearEventoFotoSchema.safeParse(data);
-  if (!parsed.success) {
-    return { status: "error", message: parsed.error.issues[0]?.message ?? "Datos inválidos." };
-  }
-
-  const { _max } = await prisma.eventoFoto.aggregate({ _max: { position: true } });
-
-  await prisma.eventoFoto.create({
-    data: {
-      id: crypto.randomUUID(),
-      url: parsed.data.url,
-      alt: parsed.data.alt,
-      position: (_max.position ?? -1) + 1,
-      published: false,
-    },
-  });
-
-  revalidatePath(APP_ROUTE.app.events.index);
-  return { status: "success", message: "Foto agregada como borrador. Publícala cuando esté lista." };
-}
-
-// `orderedIds` is the full new order (top to bottom); position = array index.
-export async function reordenarEventoFotosAction(orderedIds: string[]): Promise<void> {
-  await requireAdmin();
-
-  await prisma.$transaction(
-    orderedIds.map((id, position) => prisma.eventoFoto.update({ where: { id }, data: { position } })),
-  );
-  revalidatePath(APP_ROUTE.app.events.index);
-  revalidatePath("/");
-}
-
-// Marker to distinguish "cap reached, roll back on purpose" from a real DB
-// error inside the transaction below.
-class EventoFotoPublishCapError extends Error {}
-
-export async function toggleEventoFotoPublishedAction(id: string, published: boolean): Promise<ActionState> {
-  await requireAdmin();
-
-  try {
-    // Count + update run inside one Serializable transaction so two admins
-    // (or two fast clicks) publishing near-simultaneously can't both read
-    // "11 published" and both push past the 12 cap — Postgres aborts one of
-    // the two conflicting transactions instead of silently overcommitting.
-    await prisma.$transaction(
-      async (tx) => {
-        if (published) {
-          const publishedCount = await tx.eventoFoto.count({ where: { published: true } });
-          if (publishedCount >= MAX_PUBLISHED_EVENTO_FOTOS) {
-            throw new EventoFotoPublishCapError();
-          }
-        }
-        await tx.eventoFoto.update({ where: { id }, data: { published } });
-      },
-      { isolationLevel: "Serializable" },
-    );
-  } catch (err) {
-    if (err instanceof EventoFotoPublishCapError) {
-      return {
-        status: "error",
-        message: `Ya hay ${MAX_PUBLISHED_EVENTO_FOTOS} fotos publicadas (el máximo). Despublica alguna antes de agregar otra.`,
-      };
-    }
-    throw err;
-  }
-
-  revalidatePath(APP_ROUTE.app.events.index);
-  revalidatePath("/");
-  return { status: "success", message: published ? "Foto publicada." : "Foto despublicada." };
-}
-
-export async function eliminarEventoFotoAction(id: string): Promise<void> {
-  await requireAdmin();
-
-  const foto = await prisma.eventoFoto.findUnique({ where: { id }, select: { url: true } });
-  if (!foto) return;
-
-  await prisma.eventoFoto.delete({ where: { id } });
-
-  const key = keyFromObjectUrl(foto.url) ?? foto.url;
-  await deleteObject(key).catch((err) => {
-    console.error("[eliminarEventoFotoAction] failed to delete", key, err);
-  });
-
-  revalidatePath(APP_ROUTE.app.events.index);
-  revalidatePath("/");
-}
-
-// Not part of the original block 3 scope (listar/reordenar/toggle/eliminar) —
-// added because the admin table needs a way to fix an alt typo without
-// deleting and re-uploading the photo. The public carousel doesn't render
-// this alt today (EventosCarrusel uses a fixed "Evento realizado por {agencia}"
-// string — see public-data.ts), so this only affects the admin table for now.
-export async function actualizarEventoFotoAltAction(id: string, alt: string): Promise<ActionState> {
-  await requireAdmin();
-
-  const trimmed = alt.trim();
-  if (!trimmed) {
-    return { status: "error", message: "El texto alternativo es obligatorio." };
-  }
-  if (trimmed.length > 200) {
-    return { status: "error", message: "El texto alternativo es demasiado largo." };
-  }
-
-  await prisma.eventoFoto.update({ where: { id }, data: { alt: trimmed } });
-  revalidatePath(APP_ROUTE.app.events.index);
-  return { status: "success", message: "Texto alternativo actualizado." };
 }

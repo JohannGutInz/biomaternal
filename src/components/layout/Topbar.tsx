@@ -12,8 +12,8 @@ import { APP_ROUTE } from "@/lib/routes";
 
 const ROLE_LABEL: Record<UserRole, string> = {
   ADMIN: "admin",
-  USER: "usuario",
-  MODEL: "modelo",
+  STAFF: "staff",
+  SPECIALIST: "especialista",
 };
 
 export function Topbar({

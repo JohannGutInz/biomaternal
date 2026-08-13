@@ -1,7 +1,7 @@
 import { SignJWT, jwtVerify, type JWTPayload } from "jose";
 import type { UserRole } from "@/generated/prisma/browser";
 
-export const SESSION_COOKIE = "glamour_session";
+export const SESSION_COOKIE = "biomaternal_session";
 export const SESSION_TTL_SECONDS = 60 * 60 * 8;
 
 export interface SessionJwtPayload extends JWTPayload {
@@ -38,7 +38,7 @@ function getSessionSecret() {
 		process.env.SESSION_JWT_SECRET ??
 		process.env.AUTH_SECRET ??
 		process.env.NEXTAUTH_SECRET ??
-		(process.env.NODE_ENV !== "production" ? "backoffice-models-dev-session-secret" : undefined);
+		(process.env.NODE_ENV !== "production" ? "biomaternal-backoffice-dev-session-secret" : undefined);
 
 	if (!secret) {
 		throw new Error(

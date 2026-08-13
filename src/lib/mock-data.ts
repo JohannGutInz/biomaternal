@@ -1,12 +1,8 @@
-import type { SiteSettings, Package, RegistrationApplication } from "./types";
+import type { SiteSettings, RegistrationApplication } from "./types";
 
 // Demo data for the self-registration/moderation feedback flow — this surface
-// has no backing DB table yet. Models/KYC/categories/packages/EventoFoto are
-// real (see lib/data.ts, which reads those from Postgres via Prisma).
-//
-// `packages` below is legacy/unused (real packages come from prisma.package via
-// lib/data.ts) — left as-is, not touched by the eventos/bookings/clientes/
-// calendario/ingresos/portafolio cleanup.
+// has no backing DB table yet. Models/KYC/categories are real (see lib/data.ts,
+// which reads those from Postgres via Prisma).
 
 export const AGENCY_ID = "ag_default";
 
@@ -112,21 +108,13 @@ export const registrationApplications: RegistrationApplication[] = [
   },
 ];
 
-export const packages: Package[] = [
-  { id: "pkg_01", agencyId: AGENCY_ID, name: "Propuesta Primavera — Vogue Studio", clientId: "cli_01", modelIds: ["mdl_01", "mdl_05", "mdl_03"], status: "aprobado", total: 51000, createdAt: "2026-06-10" },
-  { id: "pkg_02", agencyId: AGENCY_ID, name: "Glow Launch — Lumière", clientId: "cli_02", modelIds: ["mdl_03", "mdl_06"], status: "enviado", total: 18500, createdAt: "2026-06-18" },
-  { id: "pkg_03", agencyId: AGENCY_ID, name: "Catálogo Otoño — Aurora Retail", clientId: "cli_03", modelIds: ["mdl_02", "mdl_08"], status: "enviado", total: 15000, createdAt: "2026-06-19" },
-  { id: "pkg_04", agencyId: AGENCY_ID, name: "Nova Run 2026", clientId: "cli_04", modelIds: ["mdl_04", "mdl_02"], status: "borrador", total: 16500, createdAt: "2026-06-21" },
-  { id: "pkg_05", agencyId: AGENCY_ID, name: "Joyería Cantera — Capsula", clientId: "cli_05", modelIds: ["mdl_01"], status: "rechazado", total: 18000, createdAt: "2026-05-12" },
-];
-
 export const siteSettings: SiteSettings = {
   agencyId: AGENCY_ID,
-  agencyName: "Glamour Models",
+  agencyName: "Biomaternal",
   logoUrl: "",
   primaryColor: "#BA1B5D",
   heroTitle: "SOMOS LO QUE QUIERES VER",
   heroSubtitle: "AGENCIA DE MODELOS Y EDECANES / PROTOCOLO",
   publicRegistrationActive: true,
-  registrationLinkSlug: "registro-glamour-2026",
+  registrationLinkSlug: "registro-biomaternal-2026",
 };
