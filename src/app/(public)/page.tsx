@@ -56,7 +56,7 @@ export default async function HomePage() {
             width={260}
             height={260}
             priority
-            className="-mt-[25px] mb-0 h-[170px] w-[170px] object-contain drop-shadow-[0_0_22px_rgba(233,0,110,0.5)] transition-transform duration-300 ease-out hover:scale-110 sm:h-[240px] sm:w-[240px]"
+            className="-mt-[25px] mb-0 h-[170px] w-[170px] object-contain drop-shadow-[0_0_22px_rgba(23,172,227,0.5)] transition-transform duration-300 ease-out hover:scale-110 sm:h-[240px] sm:w-[240px]"
           />
 
           <p className="mb-3 text-xs font-semibold tracking-[0.34em] text-white/65 uppercase">
@@ -73,7 +73,7 @@ export default async function HomePage() {
             </p>
           )}
 
-          <div className="mx-auto mt-4 h-px w-14 bg-glam-500 shadow-[0_0_18px_rgba(233,0,110,0.6)]" />
+          <div className="mx-auto mt-4 h-px w-14 bg-brand-500 shadow-[0_0_18px_rgba(23,172,227,0.6)]" />
 
           {config.heroTitle && (
             <p className="mt-4 max-w-2xl text-3xl leading-snug font-light text-white sm:text-4xl">
@@ -89,7 +89,7 @@ export default async function HomePage() {
                 href={cta.href}
                 className={`group relative flex flex-col items-center justify-center gap-2 rounded-2xl border px-7 py-9 text-center backdrop-blur-md transition-all duration-300 hover:-translate-y-1 ${
                   cta.variant === "primary"
-                    ? "border-glam-400 bg-gradient-to-br from-glam-500/45 via-glam-600/25 to-black/50 shadow-[0_0_36px_rgba(233,0,110,0.4)] hover:shadow-[0_0_48px_rgba(233,0,110,0.55)]"
+                    ? "border-brand-400 bg-gradient-to-br from-brand-500/45 via-brand-600/25 to-black/50 shadow-[0_0_36px_rgba(23,172,227,0.4)] hover:shadow-[0_0_48px_rgba(23,172,227,0.55)]"
                     : "border-white/15 bg-white/5 hover:border-white/30 hover:bg-white/10"
                 }`}
               >
@@ -104,8 +104,8 @@ export default async function HomePage() {
             ))}
           </div>
 
-          <p className="mt-10 max-w-2xl rounded-2xl border border-glam-500/50 bg-black/60 px-7 py-4 text-base leading-relaxed text-white shadow-[0_0_32px_rgba(233,0,110,0.3)] backdrop-blur-md sm:text-lg">
-            Cubrimos más de <span className="font-bold text-glam-400">75 ciudades</span> en la República Mexicana y
+          <p className="mt-10 max-w-2xl rounded-2xl border border-brand-500/50 bg-black/60 px-7 py-4 text-base leading-relaxed text-white shadow-[0_0_32px_rgba(23,172,227,0.3)] backdrop-blur-md sm:text-lg">
+            Cubrimos más de <span className="font-bold text-brand-400">75 ciudades</span> en la República Mexicana y
             todo el Valle de Aburrá en Antioquia, Colombia.
           </p>
         </div>
@@ -113,7 +113,7 @@ export default async function HomePage() {
         {/* Scroll arrow */}
         <a
           href="#whatsapp"
-          className="absolute bottom-8 left-1/2 z-10 flex h-10 w-10 -translate-x-1/2 items-center justify-center rounded-full border border-white/20 text-white/70 transition-colors hover:border-glam-400 hover:text-glam-400"
+          className="absolute bottom-8 left-1/2 z-10 flex h-10 w-10 -translate-x-1/2 items-center justify-center rounded-full border border-white/20 text-white/70 transition-colors hover:border-brand-400 hover:text-brand-400"
         >
           <ArrowDown className="h-5 w-5" />
         </a>
@@ -137,7 +137,7 @@ export default async function HomePage() {
               </div>
               <Link
                 href="/talentos"
-                className="inline-flex items-center gap-1.5 text-sm font-semibold tracking-wide text-glam-400 uppercase transition-colors hover:text-glam-300"
+                className="inline-flex items-center gap-1.5 text-sm font-semibold tracking-wide text-brand-400 uppercase transition-colors hover:text-brand-300"
               >
                 Ver catálogo completo <ArrowRight className="h-4 w-4" />
               </Link>
@@ -156,7 +156,7 @@ export default async function HomePage() {
       {/* <section className="relative z-10 overflow-hidden border-t border-white/5 px-6 py-20 text-center">
         <div
           className="pointer-events-none absolute inset-0"
-          style={{ background: "radial-gradient(ellipse at 50% 50%, rgba(233,0,110,0.18) 0%, transparent 65%)" }}
+          style={{ background: "radial-gradient(ellipse at 50% 50%, rgba(23,172,227,0.18) 0%, transparent 65%)" }}
         />
         <div className="relative mx-auto max-w-xl">
           <h2 className="text-2xl font-light tracking-tight text-white sm:text-3xl">
@@ -167,7 +167,7 @@ export default async function HomePage() {
           </p>
           <Link
             href="/contacto"
-            className="mt-7 inline-flex items-center gap-2 rounded-full bg-glam-500 px-7 py-3 text-sm font-semibold tracking-wide text-white uppercase transition-colors hover:bg-glam-600"
+            className="mt-7 inline-flex items-center gap-2 rounded-full bg-brand-500 px-7 py-3 text-sm font-semibold tracking-wide text-white uppercase transition-colors hover:bg-brand-600"
           >
             Contactar a la agencia <ArrowRight className="h-4 w-4" />
           </Link>

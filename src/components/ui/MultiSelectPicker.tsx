@@ -61,7 +61,7 @@ export function MultiSelectPicker({
         type="button"
         onClick={() => setOpen((v) => !v)}
         className={cn(
-          "flex w-full items-center justify-between rounded-lg border border-zinc-300 bg-white py-2.5 px-3 text-sm text-left outline-none focus:border-gold-500 focus:ring-1 focus:ring-gold-500",
+          "flex w-full items-center justify-between rounded-lg border border-zinc-300 bg-white py-2.5 px-3 text-sm text-left outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500",
           error && "border-rose-300",
         )}
       >
@@ -96,7 +96,7 @@ export function MultiSelectPicker({
                   type="checkbox"
                   checked={selectedIds.includes(o.id)}
                   onChange={() => toggle(o.id)}
-                  className="rounded border-zinc-300 text-gold-600 focus:ring-gold-500"
+                  className="rounded border-zinc-300 text-brand-600 focus:ring-brand-500"
                 />
                 {o.name}
               </label>

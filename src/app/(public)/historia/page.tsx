@@ -145,7 +145,7 @@ export default function HistoriaPage() {
             De encuestadores
             <br />a internacional
           </p>
-          <div className="h-px w-16 bg-glam-500 shadow-[0_0_18px_rgba(233,0,110,0.5)]" />
+          <div className="h-px w-16 bg-brand-500 shadow-[0_0_18px_rgba(23,172,227,0.5)]" />
           <p className="max-w-lg text-sm leading-relaxed tracking-[0.1em] text-white/60 uppercase sm:text-base">
             De una agencia de encuestadores en CDMX a una operación de modelos y edecanes con alcance nacional e
             internacional (México y Colombia).

@@ -51,7 +51,7 @@ export function PublicHeader({
     const isActive = href === "/" ? pathname === "/" : pathname.startsWith(href);
     return cn(
       "block w-full rounded-xl px-3.5 py-3.5 text-left text-[11px] tracking-[0.16em] text-white/78 uppercase transition-colors hover:bg-white/7 hover:text-white",
-      isActive && "border border-glam-500/35 bg-glam-500/20 text-glam-500 shadow-[0_0_0_1px_rgba(233,0,110,0.1)_inset] hover:bg-glam-500/28",
+      isActive && "border border-brand-500/35 bg-brand-500/20 text-brand-500 shadow-[0_0_0_1px_rgba(23,172,227,0.1)_inset] hover:bg-brand-500/28",
     );
   }
 
@@ -64,7 +64,7 @@ export function PublicHeader({
             onClick={() => setOpen((o) => !o)}
             aria-expanded={open}
             aria-haspopup="menu"
-            className="rounded-full border border-white/14 bg-white/4 px-5 py-2.5 text-[12.5px] tracking-[0.26em] text-white uppercase backdrop-blur-md transition-all hover:-translate-y-px hover:border-glam-500 hover:bg-glam-500/8 hover:text-glam-500"
+            className="rounded-full border border-white/14 bg-white/4 px-5 py-2.5 text-[12.5px] tracking-[0.26em] text-white uppercase backdrop-blur-md transition-all hover:-translate-y-px hover:border-brand-500 hover:bg-brand-500/8 hover:text-brand-500"
           >
             Menú ▾
           </button>

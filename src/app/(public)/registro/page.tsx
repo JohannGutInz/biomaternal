@@ -26,7 +26,7 @@ export default async function RegistrationPage() {
             Únete al equipo
           </p>
           <h1 className="text-4xl font-light tracking-[0.06em] text-white sm:text-5xl">{config.agencyName}</h1>
-          <div className="mx-auto mt-5 h-px w-12 bg-glam-500" />
+          <div className="mx-auto mt-5 h-px w-12 bg-brand-500" />
           <p className="mx-auto mt-5 max-w-xl text-sm text-white/60">
             Completa tus datos. Nuestro equipo revisará tu información y te contactará por correo.
           </p>

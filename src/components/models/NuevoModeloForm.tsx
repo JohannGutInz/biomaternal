@@ -23,9 +23,9 @@ interface Props {
 }
 
 const INPUT =
-  "w-full rounded-lg border border-zinc-300 bg-white py-2.5 px-3 text-sm outline-none focus:border-gold-500 focus:ring-1 focus:ring-gold-500 disabled:cursor-not-allowed disabled:bg-zinc-50 disabled:text-zinc-400";
+  "w-full rounded-lg border border-zinc-300 bg-white py-2.5 px-3 text-sm outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 disabled:cursor-not-allowed disabled:bg-zinc-50 disabled:text-zinc-400";
 const SELECT =
-  "w-full rounded-lg border border-zinc-300 bg-white py-2.5 px-3 text-sm outline-none focus:border-gold-500 disabled:cursor-not-allowed disabled:bg-zinc-50 disabled:text-zinc-400";
+  "w-full rounded-lg border border-zinc-300 bg-white py-2.5 px-3 text-sm outline-none focus:border-brand-500 disabled:cursor-not-allowed disabled:bg-zinc-50 disabled:text-zinc-400";
 
 const SHIRT_SIZES = ["XS", "S", "M", "L", "XL", "XXL"];
 
@@ -308,7 +308,7 @@ export function NuevoModeloForm({ countries, states, municipalities, categories 
             <select
               value={categoryPickerId}
               onChange={(e) => setCategoryPickerId(e.target.value)}
-              className="flex-1 rounded-lg border border-zinc-300 bg-white py-2.5 px-3 text-sm outline-none focus:border-gold-500"
+              className="flex-1 rounded-lg border border-zinc-300 bg-white py-2.5 px-3 text-sm outline-none focus:border-brand-500"
             >
               <option value="" disabled>Selecciona una categoría…</option>
               {categories

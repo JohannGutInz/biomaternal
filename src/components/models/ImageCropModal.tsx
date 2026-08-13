@@ -109,7 +109,7 @@ export function ImageCropModal({ src, aspect = 1, onConfirm, onCancel }: ImageCr
           type="button"
           onClick={handleConfirm}
           disabled={processing}
-          className="inline-flex items-center gap-1.5 rounded-lg bg-gold-500 px-4 py-2 text-sm font-semibold text-zinc-950 transition-colors hover:bg-gold-400 disabled:pointer-events-none disabled:opacity-50"
+          className="inline-flex items-center gap-1.5 rounded-lg bg-brand-500 px-4 py-2 text-sm font-semibold text-zinc-950 transition-colors hover:bg-brand-400 disabled:pointer-events-none disabled:opacity-50"
         >
           <Check className="h-4 w-4" />
           {processing ? "Procesando…" : "Listo"}
@@ -169,7 +169,7 @@ export function ImageCropModal({ src, aspect = 1, onConfirm, onCancel }: ImageCr
               value={zoom}
               onChange={(e) => setZoom(Number(e.target.value))}
               aria-label="Zoom"
-              className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-white/20 accent-gold-500"
+              className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-white/20 accent-brand-500"
             />
           </div>
           <span className="w-8 text-xs text-zinc-500">{zoom.toFixed(1)}×</span>

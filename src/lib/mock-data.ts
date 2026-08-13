@@ -112,7 +112,7 @@ export const siteSettings: SiteSettings = {
   agencyId: AGENCY_ID,
   agencyName: "Biomaternal",
   logoUrl: "",
-  primaryColor: "#BA1B5D",
+  primaryColor: "#17ACE3",
   heroTitle: "SOMOS LO QUE QUIERES VER",
   heroSubtitle: "AGENCIA DE MODELOS Y EDECANES / PROTOCOLO",
   publicRegistrationActive: true,

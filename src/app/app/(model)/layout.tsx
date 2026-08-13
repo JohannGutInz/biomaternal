@@ -15,7 +15,7 @@ const KYC_STATUS_BANNER: Record<string, { label: string; className: string } | u
   },
   REQUIRES_CHANGES: {
     label: "La agencia solicitó cambios en tu perfil. Revisa la sección Mi perfil.",
-    className: "bg-gold-50 border-gold-200 text-gold-800",
+    className: "bg-brand-50 border-brand-200 text-brand-800",
   },
   REJECTED: {
     label: "Tu perfil fue rechazado. Revisa la sección Mi perfil para más detalles.",
@@ -44,7 +44,7 @@ export default async function ModelGroupLayout({
       <header className="sticky top-0 z-30 flex items-center justify-between border-b border-zinc-200 bg-white px-6 py-3.5 shadow-sm">
         <div className="flex items-center gap-3">
           <span className="text-lg font-semibold tracking-tight text-zinc-950">
-            Bio<span className="text-gold-500">maternal</span>
+            Bio<span className="text-brand-500">maternal</span>
           </span>
           {kycStatus === "APPROVED" && (
             <span className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-xs font-medium whitespace-nowrap text-emerald-700">
@@ -59,7 +59,7 @@ export default async function ModelGroupLayout({
             <Button
               type="submit"
               variant="ghost"
-              className="text-sm text-zinc-500 hover:bg-transparent hover:text-gold-600"
+              className="text-sm text-zinc-500 hover:bg-transparent hover:text-brand-600"
             >
               Cerrar sesión
             </Button>

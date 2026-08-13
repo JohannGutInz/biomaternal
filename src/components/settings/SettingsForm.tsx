@@ -84,7 +84,7 @@ export function SettingsForm({ config }: { config: SiteSettings }) {
             <label className="mb-1.5 block text-sm font-medium text-zinc-700">Logo</label>
             <button
               type="button"
-              className="flex w-full flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-zinc-300 bg-zinc-50 py-8 text-zinc-400 hover:border-gold-400 hover:text-gold-600"
+              className="flex w-full flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-zinc-300 bg-zinc-50 py-8 text-zinc-400 hover:border-brand-400 hover:text-brand-600"
             >
               <ImagePlus className="h-6 w-6" />
               <span className="text-xs">Arrastra tu logo o haz clic para subir (PNG/SVG)</span>

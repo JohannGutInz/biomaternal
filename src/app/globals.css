@@ -11,31 +11,22 @@
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 
-  /* Acento de marca GlamourModels (#BA1B5D) — elegante sobre negro/gris */
-  --color-gold-50: #fcf4f7;
-  --color-gold-100: #f5dde7;
-  --color-gold-200: #e7afc6;
-  --color-gold-300: #d982a6;
-  --color-gold-400: #c94d81;
-  --color-gold-500: #ba1b5d;
-  --color-gold-600: #9e174f;
-  --color-gold-700: #821341;
-  --color-gold-800: #660f33;
-  --color-gold-900: #4a0b25;
+  /* Azul de marca Biomaternal (#17ACE3) — panel admin, sitio público, todo el UI */
+  --color-brand-50: #eff9fe;
+  --color-brand-100: #d6f0fb;
+  --color-brand-200: #b0e3f8;
+  --color-brand-300: #7ad0f2;
+  --color-brand-400: #38b6e8;
+  --color-brand-500: #17ace3;
+  --color-brand-600: #0d8bbd;
+  --color-brand-700: #0e6f97;
+  --color-brand-800: #125a7b;
+  --color-brand-900: #144c67;
 
-  /* Rosa exacto del bosquejo del cliente (#E9006E) — solo para el sitio público
-     rediseñado (src/app/(public)/**). No reemplaza gold-*, que sigue en uso en
-     el panel admin y en src/components/ui/. */
-  --color-glam-50: #fdf2f7;
-  --color-glam-100: #fbdcea;
-  --color-glam-200: #f7aed0;
-  --color-glam-300: #f37fb5;
-  --color-glam-400: #ef3a91;
-  --color-glam-500: #e9006e;
-  --color-glam-600: #c4005e;
-  --color-glam-700: #99004a;
-  --color-glam-800: #720337;
-  --color-glam-900: #4d0426;
+  /* Acento verde/lima del subrayado del logo — con moderación (subrayados, badges de éxito) */
+  --color-accent-400: #a4ce4e;
+  --color-accent-500: #8cc63f;
+  --color-accent-600: #6ea62e;
 }
 
 body {
@@ -45,7 +36,7 @@ body {
 }
 
 ::selection {
-  background: var(--color-gold-200);
+  background: var(--color-brand-200);
 }
 
 @keyframes marquee {

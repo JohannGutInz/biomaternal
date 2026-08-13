@@ -38,7 +38,7 @@ export function BookGallery({ photoUrls, modelName }: { photoUrls: string[]; mod
             type="button"
             onClick={() => open(i)}
             aria-label={`Ver foto de book ${i + 1} de ${modelName}`}
-            className="group relative aspect-square overflow-hidden rounded-xl bg-white/5 transition-transform duration-200 hover:scale-[1.03] hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-glam-500"
+            className="group relative aspect-square overflow-hidden rounded-xl bg-white/5 transition-transform duration-200 hover:scale-[1.03] hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
           >
             <Image
               src={url}

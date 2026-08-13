@@ -207,7 +207,7 @@ export default async function ModerationDetailPage({
                             href={url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="truncate text-sm text-gold-700 underline hover:text-gold-600"
+                            className="truncate text-sm text-brand-700 underline hover:text-brand-600"
                           >
                             {url}
                           </a>
@@ -236,11 +236,11 @@ export default async function ModerationDetailPage({
               />
               <Textarea
                 label="Comentario para el modelo · visible en su notificación"
-                labelClassName="text-xs font-semibold tracking-wide text-gold-700 uppercase"
+                labelClassName="text-xs font-semibold tracking-wide text-brand-700 uppercase"
                 name="comment"
                 defaultValue={kyc.comment ?? ""}
                 placeholder="Lo que el modelo recibirá como retroalimentación…"
-                className="border-gold-200 bg-gold-50 text-gold-900 focus:border-gold-400 focus:ring-gold-400"
+                className="border-brand-200 bg-brand-50 text-brand-900 focus:border-brand-400 focus:ring-brand-400"
               />
 
               {canReview && (

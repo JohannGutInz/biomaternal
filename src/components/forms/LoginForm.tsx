@@ -37,12 +37,12 @@ export default function LoginForm() {
           }}
         />
         <div className="relative text-2xl font-semibold tracking-tight">
-          Bio<span className="text-gold-400">maternal</span>
+          Bio<span className="text-brand-400">maternal</span>
         </div>
         <div className="relative max-w-md">
           <p className="text-3xl leading-tight font-light text-zinc-100">
             La plataforma que ordena consultorios, especialistas y cobros de tus clínicas
-            <span className="text-gold-400">.</span>
+            <span className="text-brand-400">.</span>
           </p>
           <p className="mt-6 text-sm text-zinc-500">
             Backoffice interno — acceso restringido al staff de la clínica.
@@ -55,7 +55,7 @@ export default function LoginForm() {
         <div className="w-full max-w-sm">
           <div className="mb-10 lg:hidden">
             <span className="text-2xl font-semibold tracking-tight text-zinc-950">
-              Bio<span className="text-gold-500">maternal</span>
+              Bio<span className="text-brand-500">maternal</span>
             </span>
           </div>
 
@@ -89,7 +89,7 @@ export default function LoginForm() {
 
             <div className="flex items-center justify-between pt-1 text-sm">
               <Checkbox defaultChecked label="Recordarme" />
-              <a href="#" className="font-medium text-zinc-500 hover:text-gold-600">
+              <a href="#" className="font-medium text-zinc-500 hover:text-brand-600">
                 ¿Olvidaste tu contraseña?
               </a>
             </div>

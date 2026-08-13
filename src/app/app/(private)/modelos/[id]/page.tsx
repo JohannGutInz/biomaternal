@@ -247,7 +247,7 @@ export default async function ModelDetailPage({
                             href={url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="truncate text-sm text-gold-700 underline hover:text-gold-600"
+                            className="truncate text-sm text-brand-700 underline hover:text-brand-600"
                           >
                             {url}
                           </a>

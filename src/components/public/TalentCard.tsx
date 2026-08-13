@@ -40,7 +40,7 @@ export function TalentCard({ model }: { model: PublicModel }) {
   return (
     <Link
       href={`/talentos/${model.id}`}
-      className="group relative flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-black/70 shadow-lg shadow-black/40 transition-all duration-300 hover:-translate-y-1 hover:border-glam-500/40"
+      className="group relative flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-black/70 shadow-lg shadow-black/40 transition-all duration-300 hover:-translate-y-1 hover:border-brand-500/40"
     >
       {/* Image area */}
       <div className="relative aspect-[3/4] overflow-hidden bg-zinc-900">
@@ -87,7 +87,7 @@ export function TalentCard({ model }: { model: PublicModel }) {
 
         {/* Featured badge */}
         {model.featured && (
-          <span className="absolute top-2.5 right-2.5 z-10 flex items-center gap-1 rounded-full bg-glam-500/95 px-2.5 py-1 text-[10px] font-semibold text-white shadow">
+          <span className="absolute top-2.5 right-2.5 z-10 flex items-center gap-1 rounded-full bg-brand-500/95 px-2.5 py-1 text-[10px] font-semibold text-white shadow">
             <Star className="h-3 w-3 fill-current" /> Destacado
           </span>
         )}
@@ -114,7 +114,7 @@ export function TalentCard({ model }: { model: PublicModel }) {
             {model.categories.slice(0, 2).map((c) => (
               <span
                 key={c}
-                className="rounded-full bg-glam-500/15 px-2 py-0.5 text-[9.5px] font-medium tracking-wide text-glam-300 uppercase ring-1 ring-inset ring-glam-500/25"
+                className="rounded-full bg-brand-500/15 px-2 py-0.5 text-[9.5px] font-medium tracking-wide text-brand-300 uppercase ring-1 ring-inset ring-brand-500/25"
               >
                 {c}
               </span>

@@ -16,7 +16,7 @@ export function BrandBackground() {
         className="absolute inset-0"
         style={{
           background:
-            "radial-gradient(ellipse at 50% 35%, rgba(233,0,110,0.38) 0%, rgba(0,0,0,0.25) 45%, rgba(0,0,0,0.85) 85%)",
+            "radial-gradient(ellipse at 50% 35%, rgba(23,172,227,0.38) 0%, rgba(0,0,0,0.25) 45%, rgba(0,0,0,0.85) 85%)",
         }}
       />
       <div

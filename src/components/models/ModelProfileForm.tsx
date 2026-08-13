@@ -29,7 +29,7 @@ const KYC_BADGE: Record<string, { label: string; className: string }> = {
   PENDING: { label: "En revisión", className: "bg-amber-50 text-amber-700 border-amber-200" },
   APPROVED: { label: "Aprobado", className: "bg-emerald-50 text-emerald-700 border-emerald-200" },
   REJECTED: { label: "Rechazado", className: "bg-rose-50 text-rose-700 border-rose-200" },
-  REQUIRES_CHANGES: { label: "Requiere cambios", className: "bg-gold-50 text-gold-700 border-gold-200" },
+  REQUIRES_CHANGES: { label: "Requiere cambios", className: "bg-brand-50 text-brand-700 border-brand-200" },
 };
 
 interface Category {
@@ -471,7 +471,7 @@ export function ModelProfileForm({
         type="submit"
         form="model-profile-form"
         disabled={isSubmitting}
-        className="w-full rounded-xl bg-zinc-950 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-gold-600 disabled:pointer-events-none disabled:opacity-50"
+        className="w-full rounded-xl bg-zinc-950 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-brand-600 disabled:pointer-events-none disabled:opacity-50"
       >
         {isSubmitting ? "Guardando…" : "Guardar cambios"}
       </button>

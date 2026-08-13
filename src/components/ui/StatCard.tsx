@@ -4,7 +4,7 @@ import { Card } from "./Card";
 
 const iconToneClasses: Record<string, string> = {
   zinc: "bg-zinc-100 text-zinc-700",
-  gold: "bg-gold-100 text-gold-700",
+  gold: "bg-brand-100 text-brand-700",
   emerald: "bg-emerald-100 text-emerald-700",
   rose: "bg-rose-100 text-rose-700",
   sky: "bg-sky-100 text-sky-700",

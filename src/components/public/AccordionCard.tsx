@@ -38,12 +38,12 @@ export function AccordionCard({
         !open && tone === "solid-dark" && "border-white/16 bg-black/88 hover:border-white/28",
         !open && tone === "solid-light" && "border-white/95 bg-white hover:border-white",
         open && tone === "gradient" &&
-          "border-glam-500 bg-gradient-to-br from-glam-500/24 to-black/94 shadow-[0_20px_60px_rgba(233,0,110,0.24),0_0_0_1px_rgba(233,0,110,0.15)_inset]",
+          "border-brand-500 bg-gradient-to-br from-brand-500/24 to-black/94 shadow-[0_20px_60px_rgba(23,172,227,0.24),0_0_0_1px_rgba(23,172,227,0.15)_inset]",
         open && tone === "plain" && "border-[#2a2a2a] bg-black",
         open && tone === "solid-dark" &&
-          "border-glam-500 bg-black/94 shadow-[0_20px_60px_rgba(233,0,110,0.28),0_0_0_1px_rgba(233,0,110,0.18)_inset]",
+          "border-brand-500 bg-black/94 shadow-[0_20px_60px_rgba(23,172,227,0.28),0_0_0_1px_rgba(23,172,227,0.18)_inset]",
         open && tone === "solid-light" &&
-          "border-glam-500 bg-white shadow-[0_20px_60px_rgba(233,0,110,0.22),0_0_0_1px_rgba(233,0,110,0.15)_inset]",
+          "border-brand-500 bg-white shadow-[0_20px_60px_rgba(23,172,227,0.22),0_0_0_1px_rgba(23,172,227,0.15)_inset]",
       )}
     >
       <button
@@ -67,7 +67,7 @@ export function AccordionCard({
             open && "rotate-45",
             !open && isLight && "border-black/12 bg-black/4 text-black/60",
             !open && !isLight && "border-white/16 bg-white/4 text-white/70",
-            open && "border-glam-500 bg-glam-500/14 text-glam-500",
+            open && "border-brand-500 bg-brand-500/14 text-brand-500",
           )}
         >
           +
@@ -77,7 +77,7 @@ export function AccordionCard({
       {open && (
         <div className="px-5 pb-5">
           {tag && (
-            <span className="mb-3 inline-block rounded-full border border-glam-500/25 bg-glam-500/8 px-2.5 py-1.5 text-[10px] font-semibold tracking-[0.2em] text-glam-500 uppercase">
+            <span className="mb-3 inline-block rounded-full border border-brand-500/25 bg-brand-500/8 px-2.5 py-1.5 text-[10px] font-semibold tracking-[0.2em] text-brand-500 uppercase">
               {tag}
             </span>
           )}

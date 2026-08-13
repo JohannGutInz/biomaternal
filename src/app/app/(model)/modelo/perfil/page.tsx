@@ -37,8 +37,8 @@ export default async function ModelProfilePage() {
       )}
 
       {model.kyc.status === "REQUIRES_CHANGES" && model.kyc.comment && (
-        <div className="flex items-start gap-3 rounded-xl border border-gold-200 bg-gold-50 p-4 text-sm text-gold-900">
-          <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-gold-600" />
+        <div className="flex items-start gap-3 rounded-xl border border-brand-200 bg-brand-50 p-4 text-sm text-brand-900">
+          <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-brand-600" />
           <div>
             <p className="font-medium">La agencia solicitó cambios en tu perfil</p>
             <p className="mt-1">{model.kyc.comment}</p>

@@ -77,7 +77,7 @@ export function Sidebar({
           <Button
             variant="ghost"
             onClick={onToggle}
-            className="hidden h-9 w-9 shrink-0 p-0 text-zinc-400 hover:bg-white/5 hover:text-gold-300 lg:flex"
+            className="hidden h-9 w-9 shrink-0 p-0 text-zinc-400 hover:bg-white/5 hover:text-brand-300 lg:flex"
             aria-label="Contraer o expandir menú"
           >
             {collapsed ? <PanelLeftOpen className="h-[18px] w-[18px]" /> : <PanelLeftClose className="h-[18px] w-[18px]" />}
@@ -86,13 +86,13 @@ export function Sidebar({
             href={APP_ROUTE.app.dashboard.index}
             className={cn("truncate text-lg font-semibold leading-none text-white", collapsed && "lg:hidden")}
           >
-            Bio<span className="text-gold-400">maternal</span>
+            Bio<span className="text-brand-400">maternal</span>
           </Link>
           <button
             type="button"
             onClick={onMobileClose}
             aria-label="Cerrar menú"
-            className="ml-auto flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-zinc-400 hover:bg-white/5 hover:text-gold-300 lg:hidden"
+            className="ml-auto flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-zinc-400 hover:bg-white/5 hover:text-brand-300 lg:hidden"
           >
             <X className="h-[18px] w-[18px]" />
           </button>
@@ -124,20 +124,20 @@ export function Sidebar({
                         className={cn(
                           "group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
                           active
-                            ? "bg-white/[0.08] text-gold-300"
+                            ? "bg-white/[0.08] text-brand-300"
                             : "text-zinc-400 hover:bg-white/5 hover:text-zinc-100",
                           collapsed && "lg:justify-center",
                         )}
                       >
                         {active && (
-                          <span className="absolute top-1/2 left-0 h-5 w-0.5 -translate-y-1/2 rounded-full bg-gold-400" />
+                          <span className="absolute top-1/2 left-0 h-5 w-0.5 -translate-y-1/2 rounded-full bg-brand-400" />
                         )}
                         <item.icon className="h-[18px] w-[18px] shrink-0" strokeWidth={1.75} />
                         <span className={cn("truncate", collapsed && "lg:hidden")}>{item.label}</span>
                         {showBadge && (
                           <span
                             className={cn(
-                              "ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-gold-500 px-1 text-[11px] font-semibold text-zinc-950",
+                              "ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-500 px-1 text-[11px] font-semibold text-zinc-950",
                               collapsed && "lg:hidden",
                             )}
                           >
@@ -145,7 +145,7 @@ export function Sidebar({
                           </span>
                         )}
                         {collapsed && showBadge && (
-                          <span className="absolute top-1 right-1.5 hidden h-2 w-2 rounded-full bg-gold-400 lg:block" />
+                          <span className="absolute top-1 right-1.5 hidden h-2 w-2 rounded-full bg-brand-400 lg:block" />
                         )}
                       </Link>
                     </li>

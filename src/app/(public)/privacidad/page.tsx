@@ -7,13 +7,13 @@ export default function PrivacidadPage() {
       <div className="relative z-10 mx-auto max-w-3xl px-6 py-16 sm:py-24">
         <div className="rounded-[20px] border border-white/90 bg-white p-8 sm:p-10">
           <div className="mb-10">
-            <p className="mb-2 text-[11px] font-semibold tracking-[0.3em] text-glam-500 uppercase">
+            <p className="mb-2 text-[11px] font-semibold tracking-[0.3em] text-brand-500 uppercase">
               Legal
             </p>
             <h1 className="text-3xl font-light tracking-tight text-zinc-950">
               Aviso de privacidad
             </h1>
-            <div className="mt-4 h-px w-12 bg-glam-500" />
+            <div className="mt-4 h-px w-12 bg-brand-500" />
           </div>
 
           <div className="space-y-6 text-sm leading-relaxed text-zinc-600">
@@ -50,7 +50,7 @@ export default function PrivacidadPage() {
               <p>
                 Usted tiene derecho a Acceder, Rectificar, Cancelar u Oponerse al tratamiento
                 de sus datos personales. Para ejercer estos derechos, contáctenos a través de
-                nuestra página de <a href="/contacto" className="text-glam-500 hover:underline">contacto</a>.
+                nuestra página de <a href="/contacto" className="text-brand-500 hover:underline">contacto</a>.
               </p>
             </section>
 

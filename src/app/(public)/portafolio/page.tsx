@@ -18,11 +18,11 @@ export default async function PortfolioPage() {
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {events.map((event) => (
             <div key={event.id} className="overflow-hidden rounded-xl border border-zinc-200 bg-white">
-              <div className="flex h-40 items-center justify-center bg-gradient-to-br from-zinc-900 via-zinc-950 to-black text-gold-400">
+              <div className="flex h-40 items-center justify-center bg-gradient-to-br from-zinc-900 via-zinc-950 to-black text-brand-400">
                 <Sparkles className="h-7 w-7" />
               </div>
               <div className="p-5">
-                <p className="text-xs font-medium tracking-wide text-gold-700 uppercase">{event.type}</p>
+                <p className="text-xs font-medium tracking-wide text-brand-700 uppercase">{event.type}</p>
                 <p className="mt-1.5 text-base font-semibold text-zinc-900">{event.name}</p>
                 <p className="mt-1 text-sm text-zinc-500">{event.clientName}</p>
                 <p className="mt-3 text-xs text-zinc-400">

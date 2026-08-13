@@ -16,12 +16,12 @@ export function PublicFooter({ agencyName }: { agencyName: string }) {
             href="https://jpablocruzg.jimdosite.com/"
             target="_blank"
             rel="noopener noreferrer"
-            className="transition-colors hover:text-glam-400"
+            className="transition-colors hover:text-brand-400"
           >
             Acerca de nuestro director general
           </a>
           <span className="h-3 w-px bg-white/15" aria-hidden />
-          <Link href="/privacidad" className="transition-colors hover:text-glam-400">
+          <Link href="/privacidad" className="transition-colors hover:text-brand-400">
             Política de privacidad
           </Link>
         </div>
@@ -34,7 +34,7 @@ export function PublicFooter({ agencyName }: { agencyName: string }) {
               target="_blank"
               rel="noopener noreferrer"
               aria-label={label}
-              className="flex h-8 w-8 items-center justify-center rounded-full border border-white/15 text-white/70 transition-colors hover:border-glam-400 hover:text-glam-400"
+              className="flex h-8 w-8 items-center justify-center rounded-full border border-white/15 text-white/70 transition-colors hover:border-brand-400 hover:text-brand-400"
             >
               <Icon className="h-3.5 w-3.5" />
             </a>

@@ -23,7 +23,7 @@ export function ModelPortalNav() {
                 "relative flex flex-1 items-center justify-center gap-2 px-3 py-3.5 text-sm font-medium transition-colors sm:flex-none sm:justify-start",
                 "after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:rounded-full after:transition-[background]",
                 active
-                  ? "text-zinc-950 after:bg-gold-500"
+                  ? "text-zinc-950 after:bg-brand-500"
                   : "text-zinc-500 hover:text-zinc-700 after:bg-transparent",
               )}
             >

@@ -31,7 +31,7 @@ interface Props {
 // with Tailwind's `!important` modifier (cn() here is plain clsx, no
 // tailwind-merge, so a plain override class wouldn't reliably win).
 const fieldCls =
-  "!border-white/14 !bg-white/6 !text-white placeholder:!text-white/30 focus:!border-glam-500 focus:!ring-glam-500";
+  "!border-white/14 !bg-white/6 !text-white placeholder:!text-white/30 focus:!border-brand-500 focus:!ring-brand-500";
 const labelCls = "!text-[10.5px] !font-bold !tracking-[0.16em] !text-white/55 !uppercase";
 const checkboxLabelCls = "!text-white/78";
 
@@ -455,7 +455,7 @@ export function RegistrationForm({ maxDate, countries, states, municipalities, c
       <Button
         type="submit"
         disabled={isSubmitting || !captcha}
-        className="!w-full min-h-[48px] !rounded-full !bg-glam-500 px-5 hover:!bg-glam-600 sm:!w-auto"
+        className="!w-full min-h-[48px] !rounded-full !bg-brand-500 px-5 hover:!bg-brand-600 sm:!w-auto"
       >
         {isSubmitting ? "Enviando…" : "Enviar registro"} <Send className="h-4 w-4" />
       </Button>

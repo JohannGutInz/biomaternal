@@ -14,7 +14,7 @@ function MiniMap({ country, maxWidth }: { country: CountryMap; maxWidth: string 
           key={state.name}
           d={state.d}
           strokeWidth={1}
-          className={state.present ? "fill-gold-500 stroke-zinc-950" : "fill-zinc-800 stroke-zinc-700"}
+          className={state.present ? "fill-brand-500 stroke-zinc-950" : "fill-zinc-800 stroke-zinc-700"}
         >
           <title>{state.present ? `${state.name}: ${state.cities.join(", ")}` : state.name}</title>
         </path>

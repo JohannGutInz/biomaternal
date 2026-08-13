@@ -26,7 +26,7 @@ export function KycFeedbackModal({
           {isRejected ? (
             <XCircle className="mt-0.5 h-6 w-6 shrink-0 text-rose-500" />
           ) : (
-            <AlertTriangle className="mt-0.5 h-6 w-6 shrink-0 text-gold-500" />
+            <AlertTriangle className="mt-0.5 h-6 w-6 shrink-0 text-brand-500" />
           )}
           <div>
             <p className="font-semibold text-zinc-900">

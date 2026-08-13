@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 type Variant = "primary" | "secondary" | "ghost";
 
 const variantClasses: Record<Variant, string> = {
-  primary: "bg-zinc-950 text-white hover:bg-gold-600 focus-visible:outline-gold-500",
+  primary: "bg-zinc-950 text-white hover:bg-brand-600 focus-visible:outline-brand-500",
   secondary: "bg-white text-zinc-700 ring-1 ring-inset ring-zinc-200 hover:bg-zinc-50",
   ghost: "text-zinc-600 hover:bg-zinc-100",
 };

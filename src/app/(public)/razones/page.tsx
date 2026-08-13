@@ -53,10 +53,10 @@ export default function RazonesPage() {
         </div>
 
         <div className="mt-14 flex flex-col items-center gap-4 text-center">
-          <p className="text-[42px] leading-[0.9] font-light tracking-[0.14em] text-white uppercase [text-shadow:0_0_40px_rgba(186,27,93,0.5)] sm:text-6xl">
+          <p className="text-[42px] leading-[0.9] font-light tracking-[0.14em] text-white uppercase [text-shadow:0_0_40px_rgba(23,172,227,0.5)] sm:text-6xl">
             ¡Garantizado!
           </p>
-          <div className="h-px w-12 bg-glam-500 shadow-[0_0_18px_rgba(233,0,110,0.5)]" />
+          <div className="h-px w-12 bg-brand-500 shadow-[0_0_18px_rgba(23,172,227,0.5)]" />
           <p className="max-w-lg text-sm leading-relaxed tracking-[0.1em] text-white/60 uppercase sm:text-base">
             Tu evento en manos profesionales. Respuesta rápida, perfiles verificados y coordinación real el día del
             evento.

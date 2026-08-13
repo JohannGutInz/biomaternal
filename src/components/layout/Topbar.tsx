@@ -41,7 +41,7 @@ export function Topbar({
       <Button variant="ghost" className="relative h-9 w-9 p-0 text-zinc-500 hover:text-zinc-700" aria-label="Notificaciones">
         <Bell className="h-[18px] w-[18px]" strokeWidth={1.75} />
         {notificationCount > 0 && (
-          <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-gold-500 ring-2 ring-white" />
+          <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-brand-500 ring-2 ring-white" />
         )}
       </Button>
 

@@ -47,8 +47,8 @@ export default async function FeedbackPage({
 
       {application.status === "requiere_cambios" && (
         <>
-          <div className="mt-6 flex items-start gap-3 rounded-xl border border-gold-200 bg-gold-50 p-5 text-sm text-gold-900">
-            <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-gold-600" />
+          <div className="mt-6 flex items-start gap-3 rounded-xl border border-brand-200 bg-brand-50 p-5 text-sm text-brand-900">
+            <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-brand-600" />
             <p>{application.feedbackForModel}</p>
           </div>
           <div className="mt-8 border-t border-zinc-100 pt-8">

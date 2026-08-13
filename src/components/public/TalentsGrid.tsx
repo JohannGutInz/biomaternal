@@ -103,7 +103,7 @@ function RangeField({
           value={value[0]}
           onChange={(e) => onChange([Math.min(Number(e.target.value), value[1]), value[1]])}
           aria-label={`${label} mínimo`}
-          className="w-full min-w-0 rounded-lg border border-white/15 bg-white/5 px-2 py-1.5 text-center text-xs text-white outline-none focus:border-glam-500"
+          className="w-full min-w-0 rounded-lg border border-white/15 bg-white/5 px-2 py-1.5 text-center text-xs text-white outline-none focus:border-brand-500"
         />
         <span className="text-white/30">–</span>
         <input
@@ -113,7 +113,7 @@ function RangeField({
           value={value[1]}
           onChange={(e) => onChange([value[0], Math.max(Number(e.target.value), value[0])])}
           aria-label={`${label} máximo`}
-          className="w-full min-w-0 rounded-lg border border-white/15 bg-white/5 px-2 py-1.5 text-center text-xs text-white outline-none focus:border-glam-500"
+          className="w-full min-w-0 rounded-lg border border-white/15 bg-white/5 px-2 py-1.5 text-center text-xs text-white outline-none focus:border-brand-500"
         />
       </div>
     </div>
@@ -248,7 +248,7 @@ export function TalentsGrid({ models, categories, activities, geografia }: Talen
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Buscar por nombre…"
-              className="w-full rounded-full border border-white/15 bg-white/5 py-2.5 pr-3 pl-9 text-xs text-white placeholder:text-white/35 outline-none focus:border-glam-500"
+              className="w-full rounded-full border border-white/15 bg-white/5 py-2.5 pr-3 pl-9 text-xs text-white placeholder:text-white/35 outline-none focus:border-brand-500"
             />
           </div>
         </div>
@@ -340,7 +340,7 @@ export function TalentsGrid({ models, categories, activities, geografia }: Talen
                 <select
                   value={stateId}
                   onChange={(e) => { setStateId(e.target.value); setMunicipality(""); }}
-                  className="w-full rounded-lg border border-white/15 bg-white/5 px-2.5 py-2 text-xs text-white outline-none focus:border-glam-500 [&>option]:bg-zinc-900"
+                  className="w-full rounded-lg border border-white/15 bg-white/5 px-2.5 py-2 text-xs text-white outline-none focus:border-brand-500 [&>option]:bg-zinc-900"
                 >
                   <option value="">Todos los estados</option>
                   {statesForCountry.map((s) => (
@@ -353,7 +353,7 @@ export function TalentsGrid({ models, categories, activities, geografia }: Talen
                   <select
                     value={municipality}
                     onChange={(e) => setMunicipality(e.target.value)}
-                    className="w-full rounded-lg border border-white/15 bg-white/5 px-2.5 py-2 text-xs text-white outline-none focus:border-glam-500 [&>option]:bg-zinc-900"
+                    className="w-full rounded-lg border border-white/15 bg-white/5 px-2.5 py-2 text-xs text-white outline-none focus:border-brand-500 [&>option]:bg-zinc-900"
                   >
                     <option value="">Todos los municipios</option>
                     {municipalitiesForState.map((m) => (
@@ -384,14 +384,14 @@ export function TalentsGrid({ models, categories, activities, geografia }: Talen
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-full border border-white/10 bg-black/50 px-4 py-2.5">
           <span className="text-[10.5px] font-semibold tracking-[0.14em] text-white/65 uppercase">
             <b className="text-white">{sorted.length}</b> {sorted.length === 1 ? "perfil encontrado" : "perfiles encontrados"}
-            {isFiltered && <span className="ml-1.5 text-glam-400">· filtrado</span>}
+            {isFiltered && <span className="ml-1.5 text-brand-400">· filtrado</span>}
           </span>
           <label className="flex items-center gap-2 text-[9.5px] text-white/40">
             Orden:
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as SortValue)}
-              className="rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-[11px] text-white outline-none focus:border-glam-500 [&>option]:bg-zinc-900"
+              className="rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-[11px] text-white outline-none focus:border-brand-500 [&>option]:bg-zinc-900"
             >
               {SORT_OPTIONS.map((o) => (
                 <option key={o.value} value={o.value}>
@@ -417,7 +417,7 @@ export function TalentsGrid({ models, categories, activities, geografia }: Talen
             </p>
             <Link
               href="/contacto"
-              className="mt-6 rounded-full bg-glam-500 px-6 py-2.5 text-xs font-semibold tracking-wide text-white uppercase transition-colors hover:bg-glam-600"
+              className="mt-6 rounded-full bg-brand-500 px-6 py-2.5 text-xs font-semibold tracking-wide text-white uppercase transition-colors hover:bg-brand-600"
             >
               Contactar a la agencia
             </Link>

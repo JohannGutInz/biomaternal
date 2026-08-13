@@ -114,7 +114,7 @@ export function PortfolioSection({ entries }: Props) {
               <button
                 key={entry.id}
                 onClick={() => setSelected(entry)}
-                className="group text-left overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm transition-[border-color,transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:border-gold-500 hover:shadow-md"
+                className="group text-left overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm transition-[border-color,transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:border-brand-500 hover:shadow-md"
               >
                 {/* Cover image */}
                 <div className="aspect-[4/3] overflow-hidden">

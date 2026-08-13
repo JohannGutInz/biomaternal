@@ -27,7 +27,7 @@ export function StatusTabs({
             href={tab.value === "todas" ? basePath : `${basePath}?estado=${tab.value}`}
             className={cn(
               "relative -mb-px rounded-t-lg px-3.5 py-2.5 text-sm font-medium transition-colors",
-              isActive ? "border-b-2 border-gold-500 text-zinc-900" : "text-zinc-500 hover:text-zinc-800",
+              isActive ? "border-b-2 border-brand-500 text-zinc-900" : "text-zinc-500 hover:text-zinc-800",
             )}
           >
             {tab.label}
@@ -35,7 +35,7 @@ export function StatusTabs({
               <span
                 className={cn(
                   "ml-1.5 rounded-full px-1.5 py-0.5 text-[11px]",
-                  isActive ? "bg-gold-100 text-gold-700" : "bg-zinc-100 text-zinc-500",
+                  isActive ? "bg-brand-100 text-brand-700" : "bg-zinc-100 text-zinc-500",
                 )}
               >
                 {counts[tab.value]}

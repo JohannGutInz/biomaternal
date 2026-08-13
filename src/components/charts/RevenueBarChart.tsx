@@ -25,7 +25,7 @@ export function RevenueBarChart({ data }: { data: { month: string; total: number
             boxShadow: "0 4px 12px rgba(0,0,0,0.06)",
           }}
         />
-        <Bar dataKey="total" fill="#ba1b5d" radius={[6, 6, 0, 0]} maxBarSize={42} />
+        <Bar dataKey="total" fill="#17ace3" radius={[6, 6, 0, 0]} maxBarSize={42} />
       </BarChart>
     </ResponsiveContainer>
   );
