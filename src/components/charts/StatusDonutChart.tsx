@@ -9,6 +9,7 @@ const STATUS_COLOR: Record<string, string> = {
   completado: "#059669",
   cancelado: "#fb7185",
   aprobado: "#059669",
+  pagado: "#059669",
   enviado: "#c94d81",
   borrador: "#a1a1aa",
   rechazado: "#fb7185",

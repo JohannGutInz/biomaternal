@@ -233,3 +233,85 @@ export async function getDashboardStats() {
     pendingReservations,
   };
 }
+
+// ---------- Dashboard KPIs (§8 CLAUDE-biomaternal.md) ----------
+
+export interface OccupancyKpi {
+  sucursalId: string;
+  sucursalName: string;
+  occupancyPct: number;
+}
+
+export interface TopSpecialistKpi {
+  specialistId: string;
+  name: string;
+  reservationsCount: number;
+}
+
+export async function getDashboardKpis() {
+  const now = new Date();
+  const weekAgo = new Date(now);
+  weekAgo.setDate(weekAgo.getDate() - 7);
+  const monthAgo = new Date(now);
+  monthAgo.setDate(monthAgo.getDate() - 30);
+
+  const [sucursales, occupiedWindow, charges, recentReservations] = await Promise.all([
+    prisma.sucursal.findMany({ include: { consultorios: { where: { isActive: true } } } }),
+    prisma.reservation.findMany({
+      where: { startAt: { lt: now }, endAt: { gt: weekAgo }, status: { in: ["CONFIRMED", "COMPLETED"] } },
+      select: { startAt: true, endAt: true, consultorio: { select: { sucursalId: true } } },
+    }),
+    prisma.charge.findMany({ select: { amount: true, status: true } }),
+    prisma.reservation.findMany({
+      where: { startAt: { gte: monthAgo }, status: { not: "CANCELLED" } },
+      select: { specialistId: true, specialist: { select: { firstName: true, paternalLastName: true } } },
+    }),
+  ]);
+
+  // Ocupación % por sucursal, últimos 7 días: horas reservadas (recortadas a la
+  // ventana) / horas disponibles (consultorios activos x horario x 7 días).
+  const occupancy: OccupancyKpi[] = sucursales.map((s) => {
+    const [openH, openM] = s.openTime.split(":").map(Number);
+    const [closeH, closeM] = s.closeTime.split(":").map(Number);
+    const dailyHours = Math.max(closeH + closeM / 60 - (openH + openM / 60), 0);
+    const availableHours = dailyHours * s.consultorios.length * 7;
+
+    const reservedHours = occupiedWindow
+      .filter((r) => r.consultorio.sucursalId === s.id)
+      .reduce((sum, r) => {
+        const start = r.startAt < weekAgo ? weekAgo : r.startAt;
+        const end = r.endAt > now ? now : r.endAt;
+        return sum + Math.max((end.getTime() - start.getTime()) / (1000 * 60 * 60), 0);
+      }, 0);
+
+    return {
+      sucursalId: s.id,
+      sucursalName: s.name,
+      occupancyPct: availableHours > 0 ? Math.min(Math.round((reservedHours / availableHours) * 100), 100) : 0,
+    };
+  });
+
+  const revenue = {
+    paid: charges.filter((c) => c.status === "PAID").reduce((sum, c) => sum + c.amount, 0),
+    pending: charges.filter((c) => c.status === "PENDING").reduce((sum, c) => sum + c.amount, 0),
+  };
+
+  const bySpecialist = new Map<string, TopSpecialistKpi>();
+  for (const r of recentReservations) {
+    const existing = bySpecialist.get(r.specialistId);
+    if (existing) {
+      existing.reservationsCount += 1;
+    } else {
+      bySpecialist.set(r.specialistId, {
+        specialistId: r.specialistId,
+        name: `${r.specialist.firstName} ${r.specialist.paternalLastName}`,
+        reservationsCount: 1,
+      });
+    }
+  }
+  const topSpecialists = Array.from(bySpecialist.values())
+    .sort((a, b) => b.reservationsCount - a.reservationsCount)
+    .slice(0, 5);
+
+  return { occupancy, revenue, topSpecialists };
+}

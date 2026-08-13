@@ -1,13 +1,16 @@
 import { Building2, ClipboardCheck, ShieldCheck, UserPlus, UserRoundPlus, UsersRound } from "lucide-react";
 import { StatCard } from "@/components/ui/StatCard";
+import { Card, CardHeader } from "@/components/ui/Card";
 import { AlertList } from "@/components/dashboard/AlertList";
 import { QuickActions } from "@/components/dashboard/QuickActions";
-import { getDashboardStats, getCurrentUser } from "@/lib/data";
+import { OccupancyBars } from "@/components/charts/OccupancyBars";
+import { StatusDonutChart } from "@/components/charts/StatusDonutChart";
+import { getDashboardStats, getDashboardKpis, getCurrentUser } from "@/lib/data";
 import { APP_ROUTE } from "@/lib/routes";
-import { formatLongDate, greetingForHour } from "@/lib/utils";
+import { formatCurrency, formatLongDate, greetingForHour } from "@/lib/utils";
 
 export default async function DashboardPage() {
-  const [user, stats] = await Promise.all([getCurrentUser(), getDashboardStats()]);
+  const [user, stats, kpis] = await Promise.all([getCurrentUser(), getDashboardStats(), getDashboardKpis()]);
 
   const now = new Date();
 
@@ -49,6 +52,47 @@ export default async function DashboardPage() {
           icon={ClipboardCheck}
           tone="gold"
         />
+      </div>
+
+      <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <Card className="p-5">
+          <CardHeader title="Ocupación por sucursal" subtitle="Últimos 7 días" className="p-0 pb-4" />
+          <OccupancyBars data={kpis.occupancy} />
+        </Card>
+
+        <Card className="p-5">
+          <CardHeader title="Ingresos por cobros" subtitle="Pagado vs. pendiente" className="p-0 pb-2" />
+          <StatusDonutChart
+            data={[
+              { status: "pagado", total: kpis.revenue.paid },
+              { status: "pendiente", total: kpis.revenue.pending },
+            ]}
+          />
+          <p className="mt-2 text-center text-xs text-zinc-500">
+            {formatCurrency(kpis.revenue.paid)} cobrados · {formatCurrency(kpis.revenue.pending)} por cobrar
+          </p>
+        </Card>
+
+        <Card className="p-5">
+          <CardHeader title="Especialistas más activos" subtitle="Últimos 30 días" className="p-0 pb-4" />
+          {kpis.topSpecialists.length === 0 ? (
+            <p className="text-sm text-zinc-400">Sin reservas registradas aún.</p>
+          ) : (
+            <ul className="space-y-3">
+              {kpis.topSpecialists.map((s, i) => (
+                <li key={s.specialistId} className="flex items-center justify-between text-sm">
+                  <span className="flex items-center gap-2 text-zinc-700">
+                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-zinc-100 text-xs font-medium text-zinc-500">
+                      {i + 1}
+                    </span>
+                    {s.name}
+                  </span>
+                  <span className="font-medium text-zinc-900">{s.reservationsCount}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Card>
       </div>
 
       <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">

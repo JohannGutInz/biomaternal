@@ -18,6 +18,7 @@ const STATUS_TONE: Record<string, BadgeTone> = {
   completado: "success",
   finalizado: "success",
   disponible: "success",
+  pagado: "success",
   APPROVED: "success",
   pendiente: "warning",
   requiere_cambios: "warning",
