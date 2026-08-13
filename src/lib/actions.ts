@@ -17,6 +17,7 @@ import {
   sucursalSchema,
   consultorioSchema,
   reservationSchema,
+  reservationSelfSchema,
   chargeSchema,
 } from "./schemas";
 import { deleteObject, keyFromObjectUrl, getSignedDownloadUrl } from "./storage";
@@ -33,6 +34,7 @@ import type {
   SucursalData,
   ConsultorioData,
   ReservationData,
+  ReservationSelfData,
   ChargeData,
 } from "./schemas";
 import { UserRole } from "@/generated/prisma/enums";
@@ -530,15 +532,27 @@ export async function toggleConsultorioActiveAction(consultorioId: string, isAct
 
 class ReservationOverlapError extends Error {}
 
-export async function crearReservationAction(data: ReservationData): Promise<ActionState & { reservationId?: string }> {
-  const session = await requireAdmin();
+function estimatePrice(
+  type: "FULL_DAY" | "HOURLY",
+  startAt: Date,
+  endAt: Date,
+  rates: { hourlyRate: number | null; dayRate: number | null },
+): number | null {
+  if (type === "FULL_DAY") return rates.dayRate ?? null;
+  if (!rates.hourlyRate) return null;
+  const hours = (endAt.getTime() - startAt.getTime()) / (1000 * 60 * 60);
+  return Math.round(rates.hourlyRate * hours);
+}
 
-  const parsed = reservationSchema.safeParse(data);
-  if (!parsed.success) {
-    return { status: "error", message: parsed.error.issues[0]?.message ?? "Datos inválidos." };
-  }
-  const d = parsed.data;
-
+async function createReservationTx(d: {
+  consultorioId: string;
+  specialistId: string;
+  type: "FULL_DAY" | "HOURLY";
+  startAt: string;
+  endAt: string;
+  notes?: string;
+  createdBy?: string;
+}): Promise<ActionState & { reservationId?: string }> {
   try {
     const reservation = await prisma.$transaction(async (tx) => {
       const overlapping = await tx.reservation.findFirst({
@@ -552,6 +566,14 @@ export async function crearReservationAction(data: ReservationData): Promise<Act
       });
       if (overlapping) throw new ReservationOverlapError();
 
+      const consultorio = await tx.consultorio.findUnique({
+        where: { id: d.consultorioId },
+        select: { hourlyRate: true, dayRate: true },
+      });
+      const priceApplied = consultorio
+        ? estimatePrice(d.type, new Date(d.startAt), new Date(d.endAt), consultorio)
+        : null;
+
       return tx.reservation.create({
         data: {
           consultorioId: d.consultorioId,
@@ -560,13 +582,15 @@ export async function crearReservationAction(data: ReservationData): Promise<Act
           startAt: new Date(d.startAt),
           endAt: new Date(d.endAt),
           notes: d.notes || null,
-          createdBy: session.username || session.email,
+          priceApplied,
+          createdBy: d.createdBy,
         },
       });
     });
 
     revalidatePath(APP_ROUTE.app.reservas.index);
     revalidatePath(APP_ROUTE.app.agenda.index);
+    revalidatePath(APP_ROUTE.app.specialist.agenda);
 
     return { status: "success", message: "Reserva creada.", reservationId: reservation.id };
   } catch (err) {
@@ -581,6 +605,52 @@ export async function crearReservationAction(data: ReservationData): Promise<Act
     }
     throw err;
   }
+}
+
+export async function crearReservationAction(data: ReservationData): Promise<ActionState & { reservationId?: string }> {
+  const session = await requireAdmin();
+
+  const parsed = reservationSchema.safeParse(data);
+  if (!parsed.success) {
+    return { status: "error", message: parsed.error.issues[0]?.message ?? "Datos inválidos." };
+  }
+
+  return createReservationTx({ ...parsed.data, createdBy: session.username || session.email });
+}
+
+// Portal del especialista: apartar/rentar un consultorio. El especialista
+// nunca elige a nombre de quién reserva — specialistId sale de su propia
+// sesión, no del formulario.
+export async function crearReservationEspecialistaAction(
+  data: ReservationSelfData,
+): Promise<ActionState & { reservationId?: string }> {
+  const cookieStore = await cookies();
+  const token = cookieStore.get(SESSION_COOKIE);
+  const session = token ? await verifySessionToken(token.value) : null;
+
+  if (!session || session.role !== "SPECIALIST") {
+    redirect(APP_ROUTE.app.login.index);
+  }
+
+  const parsed = reservationSelfSchema.safeParse(data);
+  if (!parsed.success) {
+    return { status: "error", message: parsed.error.issues[0]?.message ?? "Datos inválidos." };
+  }
+
+  const specialist = await prisma.specialist.findUnique({
+    where: { userId: session.sub },
+    select: { id: true, kyc: { select: { status: true } } },
+  });
+  if (!specialist) redirect(APP_ROUTE.app.login.index);
+  if (specialist.kyc.status !== "APPROVED") {
+    return { status: "error", message: "Solo puedes reservar consultorios con tu perfil ya aprobado." };
+  }
+
+  return createReservationTx({
+    ...parsed.data,
+    specialistId: specialist.id,
+    createdBy: session.username || session.email,
+  });
 }
 
 export async function cambiarStatusReservationAction(

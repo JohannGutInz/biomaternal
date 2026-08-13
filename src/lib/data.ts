@@ -175,6 +175,15 @@ export async function getReservation(id: string) {
   return prisma.reservation.findUnique({ where: { id }, include: reservationInclude });
 }
 
+// Portal del especialista: solo sus propias reservas.
+export async function listOwnReservations(specialistId: string) {
+  return prisma.reservation.findMany({
+    where: { specialistId },
+    include: { consultorio: { include: { sucursal: true } }, charge: true },
+    orderBy: { startAt: "desc" },
+  });
+}
+
 // Occupancy view for the calendar/agenda: reservations in a date window,
 // optionally scoped to one sucursal.
 export async function listReservationsInRange(from: Date, to: Date, sucursalId?: string) {

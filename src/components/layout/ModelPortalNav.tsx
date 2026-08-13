@@ -2,13 +2,17 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { User } from "lucide-react";
+import { CalendarDays, User } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { APP_ROUTE } from "@/lib/routes";
 
 export function ModelPortalNav() {
   const pathname = usePathname();
 
-  const tabs = [{ href: "/app/modelo/perfil", label: "Mi perfil", Icon: User }];
+  const tabs = [
+    { href: APP_ROUTE.app.specialist.profile, label: "Mi perfil", Icon: User },
+    { href: APP_ROUTE.app.specialist.agenda, label: "Mi agenda", Icon: CalendarDays },
+  ];
 
   return (
     <nav className="border-b border-zinc-200 bg-white px-4 lg:px-8">

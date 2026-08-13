@@ -109,19 +109,35 @@ export type ConsultorioData = z.infer<typeof consultorioSchema>;
 
 // ---------- Reservas / Cobros ----------
 
-export const reservationSchema = z.object({
+const reservationBaseSchema = z.object({
   consultorioId: z.string().min(1, "Selecciona un consultorio."),
   specialistId: z.string().min(1, "Selecciona un especialista."),
   type: z.enum(["FULL_DAY", "HOURLY"], { error: "Selecciona el tipo de reserva." }),
   startAt: z.string().min(1, "La fecha/hora de inicio es obligatoria."),
   endAt: z.string().min(1, "La fecha/hora de fin es obligatoria."),
   notes: z.string().optional(),
-}).refine((d) => new Date(d.endAt) > new Date(d.startAt), {
+});
+
+const endAfterStartRefinement = {
+  check: (d: { startAt: string; endAt: string }) => new Date(d.endAt) > new Date(d.startAt),
   message: "La hora de fin debe ser posterior a la de inicio.",
+} as const;
+
+export const reservationSchema = reservationBaseSchema.refine(endAfterStartRefinement.check, {
+  message: endAfterStartRefinement.message,
   path: ["endAt"],
 });
 
 export type ReservationData = z.infer<typeof reservationSchema>;
+
+// Portal del especialista: mismo formulario sin specialistId — se deriva de
+// la sesión en el servidor, nunca se confía en lo que mande el cliente.
+export const reservationSelfSchema = reservationBaseSchema.omit({ specialistId: true }).refine(endAfterStartRefinement.check, {
+  message: endAfterStartRefinement.message,
+  path: ["endAt"],
+});
+
+export type ReservationSelfData = z.infer<typeof reservationSelfSchema>;
 
 export const chargeSchema = z.object({
   reservationId: z.string().min(1),

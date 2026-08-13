@@ -23,7 +23,8 @@ export const APP_ROUTE = {
       index: "/app/catalogs"
     },
     specialist: {
-      profile: "/app/especialista/perfil"
+      profile: "/app/especialista/perfil",
+      agenda: "/app/especialista/agenda"
     },
     sucursales: {
       index: "/app/sucursales",
